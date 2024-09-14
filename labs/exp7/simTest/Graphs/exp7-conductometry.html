@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titration Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center horizontally */
+            background-color: #b8e6b9a4;
+        }
+
+        #container {
+            width: 80%;
+            max-width: 1200px;
+            /* Limit the width of the container */
+            margin: 20px auto;
+            /* Center horizontally */
+            border-radius: 25px;
+            background-color: #f44336;
+            display: flex;
+        }
+
+        #simulation {
+            width: 100%;
+            height: 600px;
+            /* Fixed height for the simulation */
+            position: relative;
+            /* Allow positioning of children */
+            margin-bottom: 20px;
+            /* Add some spacing between simulation and graph */
+            background-color: aliceblue;
+        }
+
+        #canvasContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #graph {
+            background-color: rgb(255, 255, 255);
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Important: This CSS will set the height of the Chart.js canvas */
+        #myChart {
+            height: 200px;
+        }
+
+        .button-container {
+            position: absolute;
+            /* Position the button relative to the container */
+            bottom: 10px;
+            right: 10px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button.secondary {
+            background-color: #f44336;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="simulation">
+            <div id="canvasContainer"></div>
+        </div>
+        <div style="height: 601px;width: 100%; background-color: rgb(0, 0, 0);">
+            <div id="graph">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="button-container">
+        <button class="button secondary" id="Start">Start</button>
+    </div>
+    <script>
+        // Global variables
+        let normality_titrant;
+        let volume_titrant;
+        let vadded = 0;
+        let normality_titrate = 0.1;
+        let volume_titrate = 1;
+        let size;
+
+        let shakingRotation = 0;
+        let shakingRotationSpeed = 0.15;
+        let flaskTouched = false;
+        let bureteTouched = false;
+        let liquidLevel;
+        let buretteLiquidColor;
+        let liquidDropInterval = 500;
+        let buretesize = 10;
+        let buretemainsize = 10;
+
+        let flaskheight;
+        let flaskwidth;
+        let flaskX;
+        let flaskY;
+        let cropHeight;
+
+        let croppedImg;
+        let bureteImg, flaskImg, bottomImg, backgroundImage, flaskImgbk;
+
+        let changetint;
+        let aftercolour;
+        let change = 1;
+
+        let buretetouchX; // Initialize later in setup()
+        let buretetouchY; // Initialize later in setup()
+        let flasktouchX; // Initialize later in setup()
+        let flasktouchY; // Initialize later in setup()
+
+        let darkness = 140;
+        let canvasLocation;
+
+        let canvas;
+
+        let container;
+        let waterlevel;
+        let number = 0;
+
+        let waterheight;
+        let ppt = true;
+
+        let intervalId;
+        let currentDataIndex = 0;
+
+        // Chart.js data
+        let chartData = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Conductivity (µS cm⁻¹)',
+                    data: [],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        };
+        const data1 = [
+            { x: 0, y: 70 },
+            { x: 1, y: 65 },
+            { x: 2, y: 60 },
+            { x: 2.8, y: 55 },
+            { x: 4, y: 65 },
+            { x: 5, y: 75 },
+            { x: 6, y: 85 },
+            { x: 7, y: 95 }
+        ];
+
+
+        // Chart.js instance (declared globally)
+        let myChart;
+
+        // Load images
+        function preload() {
+            bureteImg = loadImage('./images/burette51.png', loaded);
+            flaskImgbk = loadImage('./images/backflask.png', loaded);
+            flaskImg = loadImage('./images/frontflask.png', loaded);
+            bottomImg = loadImage('./images/water.png', loaded);
+            backgroundImage = loadImage('./images/bg.png', loaded);
+        }
+
+        let loadedImages = 0;
+
+        function loaded() {
+            loadedImages++;
+            if (loadedImages === 5) {
+                Swal.fire({
+                    title: "All instruments loaded.",
+                    icon: "success",
+                    allowOutsideClick: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // After images are loaded, start the simulation
+                        setup(); // Call setup() here 
+                        draw(); // Call draw() to start the drawing loop
+                    }
+                });
+            }
+        }
+
+
+        function setup() {
+            number = 0;
+            vadded = 0;
+
+            container = select('#canvasContainer');
+            if (windowWidth < 500) {
+                size = (container.width - 10) / 2;
+            } else {
+                size = (container.height - 10) / 24;
+            }
+
+            canvas = createCanvas(20 * size, 24 * size);
+            canvas.parent("#canvasContainer");
+
+            background(backgroundImage);
+
+            buretteLiquidColor = color(255, 255, 255, 100);
+            liquidLevel = 8 * size;
+            flaskheight = 5 * size / 1.1;
+            flaskwidth = 3.9 * size / 1.1;
+            flaskX = width / 2 - .7 * size;
+            flaskY = height / 2 + 5.3 * size;
+            cropHeight = flaskheight - volume_titrate * 0.0675 * size;
+
+            // Initialize touch coordinates after size is calculated
+            buretetouchX = 11 * size;
+            buretetouchY = 13 * size;
+            flasktouchX = 10.5 * size;
+            flasktouchY = 19.5 * size;
+
+            changetint = color(255, 255, 0, 200);
+            aftercolour = color(228, 88, 114, darkness);
+
+            let startButton = document.getElementById("Start");
+            startButton.addEventListener("click", toggleStartStop);
+
+            canvasLocation = canvas.position();
+
+            // Chart.js Setup (initialize chart here)
+            const ctx = document.getElementById('myChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Conductivity (µS cm⁻¹)'
+                            }
+                        },
+                        x: {
+                            min: 0,
+                            max: data1[data1.length - 1].x,
+                            title: {
+                                display: true,
+                                text: 'Volume of Titrant Added (mL)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function draw() {
+            background(backgroundImage);
+
+            if (liquidLevel >= 1 && bureteTouched == true) {
+                noStroke();
+                fill(buretteLiquidColor);
+                rect(width / 2 + .95 * size, 12.8 * size, change * size * .2 * random(.8, 1.1), random(8.7, 8.8) * size);
+            }
+
+            waterlevel = cropHeight;
+
+            if (ppt) {
+                drawppt();
+            }
+
+            flaskImg.resize(flaskwidth + 6, flaskheight);
+            flaskImgbk.resize(flaskwidth, flaskheight);
+            bottomImg.resize(flaskwidth, flaskheight);
+
+            waterheight = (flaskheight - cropHeight) * .7;
+
+            noStroke();
+            fill(buretteLiquidColor);
+            rect(width / 2 + .7 * size, 12.7 * size, size * 0.65, -liquidLevel * 1.35);
+            push();
+            image(bureteImg, width / 2 - 6.2 * size, .7 * size, 9.88 * size / 1, buretesize * 2.3 * size / 1);
+            pop();
+
+            if (flaskTouched) {
+                drawShakingFlask();
+            } else {
+                image(flaskImgbk, flaskX, flaskY, flaskwidth, flaskheight);
+                image(flaskImg, flaskX, flaskY, flaskwidth, flaskheight);
+
+                push();
+                tint(changetint);
+                if (waterheight < flaskheight) {
+                    let c = bottomImg.get(0, flaskheight - waterheight, flaskwidth, flaskheight);
+                    image(c, flaskX, flaskY + flaskheight - waterheight);
+                } else {
+                    image(bottomImg, flaskX, flaskY + flaskheight - waterheight);
+                }
+                pop();
+            }
+
+            updateStartButton();
+
+        }
+
+        function mousePressed() {
+            let dis_burete = dist(mouseX, mouseY, buretetouchX, buretetouchY);
+            if (dis_burete <= 1.5 * size) {
+                toggleStartStop();
+            }
+
+            let dis_flask = dist(mouseX, mouseY, flasktouchX, flasktouchY);
+            if (dis_flask <= 2.3 * size) {
+                flaskTouched = !flaskTouched;
+            }
+        }
+
+        function mouseReleased() {
+            buretesize = buretemainsize;
+        }
+
+        // Add liquid drop function
+        function addLiquidDrop() {
+            if (currentDataIndex < data1.length && bureteTouched) {
+                vadded = data1[currentDataIndex].x;
+                let conductivity = data1[currentDataIndex].y;
+
+                liquidLevel -= change * size / 5;
+                cropHeight -= 2.0 * change;
+                number += change;
+
+                if (vadded >= volume_titrant) {
+                    changetint = aftercolour;
+                    if (darkness <= 255) {
+                        darkness += 10;
+                    }
+                }
+
+                // Update chart data
+                chartData.labels.push(vadded.toFixed(2));
+                chartData.datasets[0].data.push(conductivity);
+                myChart.update();
+
+                currentDataIndex++;
+            } else {
+                stopTitration();
+            }
+        }
+
+        function drawShakingFlask() {
+            let shakingRotationOffset = sin(shakingRotation) * 6;
+            push();
+            translate(width / 2, 14 * size + 4 * size / 2);
+            rotate(radians(shakingRotationOffset));
+            image(flaskImgbk, flaskX - width / 2, flaskY - 16 * size, flaskwidth, flaskheight);
+
+            push();
+            tint(changetint);
+            if (waterheight < flaskheight) {
+                let c = bottomImg.get(0, flaskheight - waterheight, flaskwidth, flaskheight);
+                image(c, flaskX - width / 2, flaskY + flaskheight - waterheight - (16 * size));
+            } else {
+                image(bottomImg, flaskX - width / 2, flaskY + flaskheight - waterheight);
+            }
+            pop();
+            image(flaskImg, flaskX - width / 2, flaskY - 16 * size, flaskwidth, flaskheight);
+            pop();
+            shakingRotation += shakingRotationSpeed;
+        }
+
+        // Start titration function
+        function startTitration() {
+    normality_titrant = random(0.80, .90);
+    volume_titrant = (normality_titrant * volume_titrate) / normality_titrate;
+
+    // Reset titration variables
+    currentDataIndex = 0;
+    vadded = 0;
+    liquidLevel = 8 * size; // Reset liquid level
+    cropHeight = flaskheight - volume_titrate * 0.0675 * size; // Reset cropHeight
+
+    bureteTouched = true;
+    intervalId = setInterval(addLiquidDrop, liquidDropInterval);
+
+    // Reset chart data and update the chart
+    chartData.labels = [];
+    chartData.datasets[0].data = [];
+    myChart.update();
+
+    Swal.fire({
+        title: "Titration started",
+        icon: "success",
+        allowOutsideClick: false
+    });
+}
+
+
+        // Stop titration function
+        function stopTitration() {
+            bureteTouched = false;
+            Swal.fire({
+                title: "Titration stopped",
+                icon: "warning",
+                allowOutsideClick: false
+            });
+            clearInterval(intervalId);
+        }
+
+        function toggleStartStop() {
+            let startButton = document.getElementById("Start");
+            if (bureteTouched) {
+                stopTitration();
+            } else {
+                startTitration();
+            }
+        }
+
+        function updateStartButton() {
+            let startButton = document.getElementById("Start");
+            startButton.textContent = bureteTouched ? "Stop" : "Start";
+        }
+
+        function drawppt() {
+            size_vary = Math.floor(random(0.2152, 0.2511) * size);
+            size_vary2 = Math.floor(random(0.2152, 0.2511) * size);
+            frameRate(30);
+            fill(170, 74, 68, 255);
+            noStroke();
+            const upperBound = Math.floor(random(1, 2) + number * 1.25 - 5);
+
+            for (let i = 0; i < upperBound * 6; i++) {
+                variation = Math.floor(random(-1.4349, 1.4349) * size);
+                variation2 = Math.floor(random(0.1793, 0.3587) * size);
+
+                ellipse(flaskX + variation + 1.8 * size, flaskY + variation2 + 3.9 * size, size_vary / 4, size_vary2 / 4);
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

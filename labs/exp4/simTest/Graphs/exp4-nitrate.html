@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CV Graph of Nitrate</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background-color: #D1EED1;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: #D1EED1;
+      padding: 30px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .sidebar h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .sidebar label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .sidebar input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #e0e0e0;
+      height: 6px;
+      border-radius: 5px;
+      outline: none;
+      padding: 0;
+    }
+
+    .sidebar input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      background: #4caf50;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .sidebar input[type="range"]::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      background: #4caf50;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .sidebar button {
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar button:hover {
+      background-color: #45a049;
+    }
+
+    .sidebar select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .chart {
+      flex-grow: 1;
+      border: 1px solid #ccc;
+      height: 600px;
+      padding: 20px;
+      background-color: #D1EED1;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .curve-container path {
+      fill: none;
+      stroke-width: 2;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawCurve 5s ease-in-out forwards;
+    }
+
+    @keyframes drawCurve {
+      from {
+        stroke-dashoffset: 1000;
+      }
+
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .x-axis line,
+    .x-axis path,
+    .y-axis line,
+    .y-axis path {
+      stroke: black;
+    }
+
+    .x-axis text,
+    .y-axis text {
+      font-size: 12px;
+    }
+
+    .legend {
+      font-size: 14px;
+      font-weight: bold;
+      text-anchor: start;
+      /* transform: translateY(-50%); */
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .legend-color-box {
+      width: 20px;
+      height: 10px;
+      border: 1px solid #ccc;
+      margin-right: 5px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>CV Graph App</h2>
+      <label for="concentration">Concentration (1-5):</label>
+      <input type="range" id="concentration" min="1" max="5" value="1" />
+
+      <button id="loadNitrateSolution">Load Nitrate Solution</button>
+
+      <label for="scanType">Scan Type:</label>
+      <select id="scanType">
+        <option value="single">Single Scan</option>
+        <option value="multi">Multi Scan</option>
+      </select>
+
+      <button id="showGraph">Show Graph</button>
+    </div>
+
+    <div class="chart">
+      <svg>
+        <g class="curve-container"></g>
+        <g class="x-axis"></g>
+        <g class="y-axis"></g>
+        <g class="legend-group"></g>
+      </svg>
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <script>
+    // Sample CV data 
+    let complete = 0;
+    const cvData = {
+      scanRate10: {
+        forward: [
+          { x: 0.0, y: 0.0 },
+          { x: 0.1, y: 0.02 },
+          { x: 0.2, y: 0.05 },
+          { x: 0.3, y: 0.08 },
+          { x: 0.4, y: 0.1 },
+          { x: 0.5, y: 0.13 },
+          { x: 0.6, y: 0.15 },
+          { x: 0.7, y: 0.25 },
+          { x: 0.8, y: 0.45 },
+          { x: 0.9, y: 0.65 },
+          { x: 1.0, y: 0.75 },
+          { x: 1.1, y: 0.85 },
+          { x: 1.2, y: 2.9 },
+          { x: 1.3, y: 0.85 },
+          { x: 1.4, y: 0.75 },
+          { x: 1.5, y: 0.68 },
+          { x: 1.6, y: 0.75 },
+          { x: 1.7, y: 5.0 },
+        ],
+      },
+      scanRate20: {
+        forward: [
+          { x: 0.0, y: 0.0 },
+          { x: 0.1, y: 0.05 },
+          { x: 0.2, y: 0.1 },
+          { x: 0.3, y: 0.13 },
+          { x: 0.4, y: 0.15 },
+          { x: 0.5, y: 0.18 },
+          { x: 0.6, y: 0.2 },
+          { x: 0.7, y: 0.35 },
+          { x: 0.8, y: 0.7 },
+          { x: 0.9, y: 1.05 },
+          { x: 1.0, y: 1.4 },
+          { x: 1.1, y: 1.55 },
+          { x: 1.2, y: 3.7 },
+          { x: 1.3, y: 1.55 },
+          { x: 1.4, y: 1.4 },
+          { x: 1.5, y: 1.25 },
+          { x: 1.6, y: 1.35 },
+          { x: 1.7, y: 5.0 }
+        ],
+      },
+      scanRate30: {
+        forward: [
+          { x: 0.0, y: 0.0 },
+          { x: 0.1, y: 0.05 },
+          { x: 0.2, y: 0.1 },
+          { x: 0.3, y: 0.13 },
+          { x: 0.4, y: 0.15 },
+          { x: 0.5, y: 0.18 },
+          { x: 0.6, y: 0.2 },
+          { x: 0.7, y: 0.5 },
+          { x: 0.8, y: 1.0 },
+          { x: 0.9, y: 1.5 },
+          { x: 1.0, y: 2.0 },
+          { x: 1.1, y: 2.25 },
+          { x: 1.2, y: 4.5 },
+          { x: 1.3, y: 2.3 },
+          { x: 1.4, y: 2.1 },
+          { x: 1.5, y: 1.9 },
+          { x: 1.6, y: 2.1 },
+          { x: 1.7, y: 5.0 }
+        ],
+      },
+      scanRate40: {
+        forward: [
+          { x: 0.0, y: 0.0 },
+          { x: 0.1, y: 0.05 },
+          { x: 0.2, y: 0.1 },
+          { x: 0.3, y: 0.15 },
+          { x: 0.4, y: 0.2 },
+          { x: 0.5, y: 0.25 },
+          { x: 0.6, y: 0.3 },
+          { x: 0.7, y: 0.6 },
+          { x: 0.8, y: 1.2 },
+          { x: 0.9, y: 1.8 },
+          { x: 1.0, y: 2.4 },
+          { x: 1.1, y: 2.8 },
+          { x: 1.2, y: 5.0 },
+          { x: 1.3, y: 2.8 },
+          { x: 1.4, y: 2.4 },
+          { x: 1.5, y: 2.1 },
+          { x: 1.6, y: 2.4 },
+          { x: 1.7, y: 5.0 }
+        ],
+      },
+    };
+
+    const colors = ["blue", "red", "brown", "green"];
+    const lineStyles = ["solid", "dashed", "dotted", "dashdot"];
+
+    const svg = d3.select("svg");
+    const curveContainer = svg.select(".curve-container");
+    const legendGroup = svg.select(".legend-group");
+
+    let concentration = 1;
+    let scanType = "single";
+    let xScale, yScale, xAxis, yAxis, lineGenerator;
+    let dataLoaded = false;
+
+    function updateGraph() {
+      if (!dataLoaded) {
+        Swal.fire({
+          title: "Load the Solution first",
+          width: 600,
+          padding: "3em",
+          color: "#716add",
+          background: "bg.png",
+          backdrop: `
+            rgba(0,0,123,0.4)
+            url("/images/nyan-cat.gif")
+            left top
+            no-repeat
+          `,
+          icon: "warning",
+          allowOutsideClick: false
+
+        });
+        return;
+      }
+
+      curveContainer.selectAll("path").remove();
+      legendGroup.selectAll("*").remove();
+
+      const selectedData = {};
+
+      if (scanType === "single") {
+        selectedData.scanRate10 = {
+          forward: cvData.scanRate10.forward.map((d) => ({
+            x: d.x,
+            y: d.y * concentration,
+          })),
+        };
+      } else if (scanType === "multi") {
+        selectedData.scanRate10 = {
+          forward: cvData.scanRate10.forward.map((d) => ({
+            x: d.x,
+            y: d.y * concentration,
+          })),
+        };
+        selectedData.scanRate20 = {
+          forward: cvData.scanRate20.forward.map((d) => ({
+            x: d.x,
+            y: d.y * concentration,
+          })),
+        };
+        selectedData.scanRate30 = {
+          forward: cvData.scanRate30.forward.map((d) => ({
+            x: d.x,
+            y: d.y * concentration,
+          })),
+        };
+        selectedData.scanRate40 = {
+          forward: cvData.scanRate40.forward.map((d) => ({
+            x: d.x,
+            y: d.y * concentration,
+          })),
+        };
+      }
+
+      let allDataPoints = [];
+      Object.values(selectedData).forEach(
+        (scanRate) => (allDataPoints = allDataPoints.concat(scanRate.forward))
+      );
+
+      const maxX = d3.max(allDataPoints, (d) => d.x);
+      const minX = d3.min(allDataPoints, (d) => d.x);
+
+      // Calculate yDomain dynamically based on selected data
+      let maxY = d3.max(allDataPoints, (d) => d.y);
+      const fixedYDomain = [0, maxY * 1.1]; // 10% buffer
+
+      xScale = d3.scaleLinear().domain([minX, maxX]).range([50, 750]);
+      yScale = d3.scaleLinear().domain(fixedYDomain).range([350, 50]);
+
+      xAxis = d3.axisBottom(xScale);
+      yAxis = d3.axisLeft(yScale);
+
+      svg
+        .select(".x-axis")
+        .attr("transform", "translate(0, 350)")
+        .call(xAxis)
+        .append("text")
+        .attr("x", 450)
+        .attr("y", 30)
+        .text("Potential (V)")
+        .attr("font-size", "14px")
+        .attr("fill", "black")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "end");
+
+      svg
+        .select(".y-axis")
+        .attr("transform", "translate(50, 0)")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90) translate(-150, -30)")
+        .text("Current (mA)")
+        .attr("font-size", "14px")
+        .attr("fill", "black")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "middle");
+
+      lineGenerator = d3
+        .line()
+        .x((d) => xScale(d.x))
+        .y((d) => yScale(d.y))
+        .curve(d3.curveBasis);
+
+      function drawCurve(data, strokeColor, lineStyle) {
+        const path = curveContainer
+          .append("path")
+          .datum(data)
+          .attr("d", lineGenerator)
+          .attr("stroke", strokeColor)
+          .attr("stroke-dasharray", lineStyle)
+          .attr("stroke-dashoffset", 1000);
+
+        path
+          .transition()
+          .duration(5000)
+          .ease(d3.easeLinear)
+          .attr("stroke-dashoffset", 0);
+      }
+      Swal.fire({
+        title: "Graphs loaded",
+        icon: "success",
+        allowOutsideClick: false
+      });
+
+      let lineIndex = 0;
+      for (const scanRate in selectedData) {
+        drawCurve(
+          selectedData[scanRate].forward,
+          colors[lineIndex],
+          lineStyles[lineIndex]
+        );
+
+        legendGroup
+          .append("text")
+          .attr("class", "legend")
+          .attr("x", 820)
+          .attr("y", 55 + lineIndex * 20)
+          .text(scanRate.replace("scanRate", ""))
+          .attr("font-size", "14px")
+          .attr("fill", "black")
+          .attr("font-weight", "bold")
+          .attr("text-anchor", "start");
+
+        legendGroup
+          .append("rect")
+          .attr("class", "legend-color-box")
+          .attr("x", 780)
+          .attr("y", 45 + lineIndex * 20)
+          .attr("width", 20)
+          .attr("height", 10)
+          .style("fill", colors[lineIndex]);
+
+        lineIndex++;
+      }
+      complete = 1
+
+    }
+
+    document.getElementById("concentration").addEventListener("input", (e) => {
+      concentration = parseFloat(e.target.value);
+    });
+
+    document
+      .getElementById("loadNitrateSolution")
+      .addEventListener("click", () => {
+        Swal.fire({
+          title: "Solution is loaded",
+          icon: "success",
+          allowOutsideClick: false
+        });
+        dataLoaded = true;
+        document.getElementById("loadNitrateSolution").disabled = true;
+        document.getElementById("loadNitrateSolution").style.opacity = '.6'
+        document.getElementById("loadNitrateSolution").style.cursor = 'not-allowed'
+
+        document.getElementById("concentration").style.cursor = 'not-allowed'
+        document.getElementById("concentration").style.disabled = true
+        document.getElementById("concentration").style.opacity = '.6'
+
+
+
+      });
+
+    document.getElementById("scanType").addEventListener("change", (e) => {
+      scanType = e.target.value;
+    });
+
+    document.getElementById("showGraph").addEventListener("click", () => {
+      updateGraph();
+      // if (complete == 1) {
+      //   document.getElementById('showGraph').addEventListener('click', () => {
+      //     location.reload()
+      //   })
+      // }
+      document.getElementById("showGraph").style.disabled = true;
+      document.getElementById("showGraph").style.opacity = '.6'
+      document.getElementById("showGraph").style.cursor = 'not-allowed'
+
+      document.getElementById("scanType").style.disabled = true;
+      document.getElementById("scanType").style.opacity = '.6'
+      document.getElementById("scanType").style.cursor = 'not-allowed'
+
+    });
+
+  </script>
+</body>
+
+</html>

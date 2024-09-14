@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CV Graph with Forward and Backward Scans</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background-color: #D1EED1;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: #D1EED1;
+      padding: 30px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .sidebar h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .sidebar label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .sidebar input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #e0e0e0;
+      height: 6px;
+      border-radius: 5px;
+      outline: none;
+      padding: 0;
+    }
+
+    .sidebar input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      background: #4CAF50;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .sidebar input[type="range"]::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      background: #4CAF50;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    .sidebar button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+      margin-bottom: 10px;
+    }
+
+    .sidebar button:hover {
+      background-color: #45a049;
+    }
+
+    .sidebar select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .chart {
+      flex-grow: 1;
+      border: 1px solid #ccc;
+      height: 800px;
+      width: 800px;
+      padding: 20px;
+      background-color: #342671;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      background-color: #D1EED1;
+    }
+
+    .curve-container path {
+      fill: none;
+      stroke-width: 2;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawCurve 5s ease-in-out forwards;
+    }
+
+    @keyframes drawCurve {
+      from {
+        stroke-dashoffset: 1000;
+      }
+
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .x-axis line,
+    .x-axis path,
+    .y-axis line,
+    .y-axis path {
+      stroke: black;
+    }
+
+    .x-axis text,
+    .y-axis text {
+      font-size: 12px;
+    }
+
+    .legend {
+      font-size: 14px;
+      font-weight: bold;
+      text-anchor: start;
+      margin-top: 20%;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .legend-color-box {
+      width: 20px;
+      height: 10px;
+      border: 1px solid #ccc;
+      margin-right: 5px;
+    }
+
+    /* Print styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      .chart,
+      .chart * {
+        visibility: visible;
+      }
+
+      .chart {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    /* Styles for disabling menu elements */
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>CV Graph App</h2>
+      <label for="concentration">Concentration (1-5):</label>
+      <input type="range" id="concentration" min="1" max="5" value="1" class="disabled">
+
+      <button id="loadIronSolution">Load Iron Solution</button>
+
+      <label for="scanType">Scan Type:</label>
+      <select id="scanType" class="disabled">
+        <option value="single">Single Scan</option>
+        <option value="multi">Multi Scan</option>
+      </select>
+
+      <button id="showGraph" class="disabled">Show Graph</button>
+      <button id="resetGraph">Reset</button>
+      <button id="printGraph" class="disabled">Print Graph</button>
+    </div>
+
+    <div class="chart">
+      <svg>
+        <g class="curve-container"></g>
+        <g class="x-axis"></g>
+        <g class="y-axis"></g>
+        <g class="legend-group"></g>
+      </svg>
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    let complete = 0;
+    // Sample CV data (placeholder, replace with your actual data)
+    const cvData = {
+      scanRate10: {
+        forward: [
+          { x: 1.5, y: 2.5 },
+          { x: 1.25, y: 6.25 },
+          { x: 1, y: 12.5 },
+          { x: 0.75, y: 18.75 },
+          { x: 0.5, y: 6.25 },
+          { x: 0.25, y: -10 },
+          { x: 0.0625, y: -75 },
+          { x: -0.125, y: -125 },
+          { x: -0.3125, y: -87.5 },
+          { x: -0.5, y: -18.75 },
+          { x: -0.75, y: -18.75 },
+          { x: -1, y: -2.5 },
+        ],
+        backward: [
+          { x: 1.5, y: 2.5 },
+          { x: 1.25, y: 18.75 },
+          { x: 1, y: 37.5 },
+          { x: 0.75, y: 52.5 },
+          { x: 0.5, y: 92.5 },
+          { x: 0.375, y: 100 },
+          { x: 0.25, y: 71.25 },
+          { x: 0, y: 9.375 },
+          { x: -0.25, y: -0.75 },
+          { x: -0.125, y: 1.875 },
+          { x: -0.5, y: -3.75 },
+          { x: -0.75, y: -5.625 },
+          { x: -1, y: -1.25 },
+        ],
+      },
+      scanRate20: {
+        forward: [
+          { x: 1.5, y: 3.75 },
+          { x: 1.25, y: 8.75 },
+          { x: 1, y: 15 },
+          { x: 0.75, y: 22.5 },
+          { x: 0.5, y: 10 },
+          { x: 0.25, y: -15 },
+          { x: 0.0625, y: -93.75 },
+          { x: -0.125, y: -150 },
+          { x: -0.3125, y: -106.25 },
+          { x: -0.5, y: -25 },
+          { x: -0.75, y: -25 },
+          { x: -1, y: -3.75 },
+        ],
+        backward: [
+          { x: 1.5, y: 3.75 },
+          { x: 1.25, y: 25 },
+          { x: 1, y: 50 },
+          { x: 0.75, y: 68.75 },
+          { x: 0.5, y: 125 },
+          { x: 0.375, y: 137.5 },
+          { x: 0.25, y: 100 },
+          { x: 0, y: 12.5 },
+          { x: -0.25, y: -1.25 },
+          { x: -0.125, y: 3.125 },
+          { x: -0.5, y: -5 },
+          { x: -0.75, y: -7.5 },
+          { x: -1, y: 0 },
+        ],
+      },
+      scanRate30: {
+        forward: [
+          { x: 1.5, y: 5 },
+          { x: 1.25, y: 11.25 },
+          { x: 1, y: 18.75 },
+          { x: 0.75, y: 27.5 },
+          { x: 0.5, y: 13.75 },
+          { x: 0.25, y: -20 },
+          { x: 0.0625, y: -112.5 },
+          { x: -0.125, y: -175 },
+          { x: -0.3125, y: -125 },
+          { x: -0.5, y: -31.25 },
+          { x: -0.75, y: -31.25 },
+          { x: -1, y: -5 },
+        ],
+        backward: [
+          { x: 1.5, y: 5 },
+          { x: 1.25, y: 31.25 },
+          { x: 1, y: 62.5 },
+          { x: 0.75, y: 87.5 },
+          { x: 0.5, y: 156.25 },
+          { x: 0.375, y: 168.75 },
+          { x: 0.25, y: 125 },
+          { x: 0, y: 15.625 },
+          { x: -0.25, y: -1.875 },
+          { x: -0.125, y: 4.375 },
+          { x: -0.5, y: -6.25 },
+          { x: -0.75, y: -9.375 },
+          { x: -1, y: 0 },
+        ],
+      },
+      scanRate40: {
+        forward: [
+          { x: 1.5, y: 6.25 },
+          { x: 1.25, y: 13.75 },
+          { x: 1, y: 22.5 },
+          { x: 0.75, y: 32.5 },
+          { x: 0.5, y: 16.25 },
+          { x: 0.25, y: -25 },
+          { x: 0.0625, y: -131.25 },
+          { x: -0.125, y: -200 },
+          { x: -0.3125, y: -143.75 },
+          { x: -0.5, y: -37.5 },
+          { x: -0.75, y: -37.5 },
+          { x: -1, y: -6.25 },
+        ],
+        backward: [
+          { x: 1.5, y: 6.25 },
+          { x: 1.25, y: 37.5 },
+          { x: 1, y: 75 },
+          { x: 0.75, y: 106.25 },
+          { x: 0.5, y: 187.5 },
+          { x: 0.375, y: 200 },
+          { x: 0.25, y: 150 },
+          { x: 0, y: 18.75 },
+          { x: -0.25, y: -2.5 },
+          { x: -0.125, y: 5.625 },
+          { x: -0.5, y: -7.5 },
+          { x: -0.75, y: -11.25 },
+          { x: -1, y: 0 },
+        ],
+      },
+    };
+    const colors = ["blue", "red", "brown", "green"];
+    const lineStyles = ["solid", "dashed", "dotted", "dashdot"];
+
+    const svg = d3.select("svg");
+    const curveContainer = svg.select(".curve-container");
+    const legendGroup = svg.select(".legend-group");
+
+    let concentration = 1;
+    let scanType = "single";
+    let xScale, yScale, xAxis, yAxis, lineGenerator;
+
+    let solutionLoadCount = 0; // Track how many times the solution is loaded
+
+    // Enable/Disable menu items
+    function toggleMenu(enable) {
+      const disabledClass = "disabled";
+      document.getElementById("concentration").classList.toggle(disabledClass, !enable);
+      document.getElementById("scanType").classList.toggle(disabledClass, !enable);
+      document.getElementById("showGraph").classList.toggle(disabledClass, !enable);
+    }
+
+    function updateGraph() {
+      // Clear previous data
+      curveContainer.selectAll("path").remove();
+      legendGroup.selectAll("*").remove();
+
+      // Logic to determine which data to plot based on concentration and scanType
+      const selectedData = {};
+
+      if (scanType === "single") {
+        selectedData.scanRate10 = {
+          forward: cvData.scanRate10.forward.map((d) => ({ x: d.x, y: d.y * concentration * 1 })),
+          backward: cvData.scanRate10.backward.map((d) => ({ x: d.x, y: d.y * concentration * 1 })),
+        };
+      } else if (scanType === "multi") {
+        selectedData.scanRate10 = {
+          forward: cvData.scanRate10.forward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+          backward: cvData.scanRate10.backward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+        };
+        selectedData.scanRate20 = {
+          forward: cvData.scanRate20.forward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+          backward: cvData.scanRate20.backward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+        };
+        selectedData.scanRate30 = {
+          forward: cvData.scanRate30.forward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+          backward: cvData.scanRate30.backward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+        };
+        selectedData.scanRate40 = {
+          forward: cvData.scanRate40.forward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+          backward: cvData.scanRate40.backward.map((d) => ({ x: d.x, y: d.y * concentration * 3 })),
+        };
+      }
+
+      // Data scaling (adjust yScale based on concentration)
+      let allDataPoints = [];
+      Object.values(selectedData).forEach(
+        (scanRate) =>
+          (allDataPoints = allDataPoints.concat(scanRate.forward.concat(scanRate.backward)))
+      );
+
+      const maxX = d3.max(allDataPoints, (d) => d.x);
+      const minX = d3.min(allDataPoints, (d) => d.x);
+      const maxY = d3.max(allDataPoints, (d) => d.y);
+
+      xScale = d3.scaleLinear().domain([minX, maxX]).range([50, 750]);
+
+      // Dynamically adjust y-scale based on concentration
+      const yDomainPadding = 0.2;
+      const yDomain = [
+        (-maxY * (1 + yDomainPadding)) / concentration,
+        (maxY * (1 + yDomainPadding)) / concentration,
+      ];
+      yScale = d3
+        .scaleLinear()
+        .domain(yDomain)
+        .range([350, 50]);
+
+      xAxis = d3.axisBottom(xScale);
+      yAxis = d3.axisLeft(yScale);
+
+      svg.select(".x-axis")
+        .attr("transform", "translate(0, 350)")
+        .call(xAxis)
+        .append("text")
+        .attr("x", 450)
+        .attr("y", 30)
+        .text("Potential (V)")
+        .attr("font-size", "14px")
+        .attr("fill", "black")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "end");
+
+      svg.select(".y-axis")
+        .attr("transform", "translate(50, 0)")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90) translate(-150, -30)")
+        .text("Current (mA)")
+        .attr("font-size", "14px")
+        .attr("fill", "black")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "middle");
+
+      lineGenerator = d3
+        .line()
+        .x((d) => xScale(d.x))
+        .y((d) => yScale(d.y / 10)) // Divide y by 10 to make peaks and dips deeper
+        .curve(d3.curveBasis);
+
+      function drawCurve(data, strokeColor, lineStyle) {
+        const path = curveContainer
+          .append("path")
+          .datum(data)
+          .attr("d", lineGenerator)
+          .attr("stroke", strokeColor)
+          .attr("stroke-dasharray", lineStyle)
+          .attr("stroke-dashoffset", 1000);
+
+        path
+          .transition()
+          .duration(5000)
+          .ease(d3.easeLinear)
+          .attr("stroke-dashoffset", 0);
+
+        // Add hover effect to show data points
+        const circles = curveContainer.selectAll(".data-point")
+          .data(data)
+          .enter()
+          .append("circle")
+          .attr("class", "data-point")
+          .attr("cx", (d) => xScale(d.x))
+          .attr("cy", (d) => yScale(d.y / 10)) // Apply scaling here as well
+          .attr("r", 3)
+          .attr("fill", strokeColor)
+          .attr("opacity", 0);
+
+        path.on("mouseover", () => {
+          circles.attr("opacity", 1);
+        }).on("mouseout", () => {
+          circles.attr("opacity", 0);
+        });
+
+        // Show tooltip on circle hover
+        circles.on("mouseover", (event, d) => {
+          const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("background-color", "white")
+            .style("border", "1px solid #ccc")
+            .style("padding", "5px")
+            .style("pointer-events", "none")
+            .html(`x: ${d.x.toFixed(2)}, y: ${(d.y / 10).toFixed(2)}`); // Display scaled y value
+
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 20) + "px");
+        }).on("mouseout", () => {
+          d3.select(".tooltip").remove();
+        });
+      }
+
+      // Draw curves and legend
+      let lineIndex = 0;
+      for (const scanRate in selectedData) {
+        drawCurve(selectedData[scanRate].forward, colors[lineIndex], lineStyles[lineIndex]);
+        drawCurve(selectedData[scanRate].backward, colors[lineIndex], lineStyles[lineIndex]);
+
+        // Add legend items
+        legendGroup
+          .append("text")
+          .attr("class", "legend")
+          .attr("x", 780)
+          .attr("y", 55 + lineIndex * 20)
+          .text(scanRate.replace("scanRate", ""))
+          .attr("font-size", "14px")
+          .attr("fill", "black")
+          .attr("font-weight", "bold")
+          .attr("text-anchor", "start");
+
+        legendGroup
+          .append("rect")
+          .attr("class", "legend-color-box")
+          .attr("x", 750)
+          .attr("y", 45 + lineIndex * 20)
+          .attr("width", 20)
+          .attr("height", 10)
+          .style("fill", colors[lineIndex]);
+
+        lineIndex++;
+      }
+      complete = 1;
+      console.log(complete)
+    }
+
+    // Event listeners
+    document.getElementById("concentration").addEventListener("input", (e) => {
+      concentration = parseFloat(e.target.value);
+    });
+
+    document.getElementById("scanType").addEventListener("change", (e) => {
+      scanType = e.target.value;
+    });
+
+    document.getElementById("loadIronSolution").addEventListener("click", () => {
+      solutionLoadCount++;
+      // Implement your actual data loading logic here
+      // This is just a placeholder
+      console.log("Iron solution loaded!");
+      Swal.fire({
+        title: "Solution is loaded",
+        icon: "success",
+        allowOutsideClick: false
+      });
+
+      // Show popup or alert box
+      if (solutionLoadCount > 1) {
+        Swal.fire({
+          title: "Solution is loaded",
+          icon: "success",
+          allowOutsideClick: false
+        });
+      }
+
+      document.getElementById("loadIronSolution").style.opacity='0.6'
+      document.getElementById("loadIronSolution").style.cursor = 'not-allowed'
+      document.getElementById("loadIronSolution").disabled=true
+
+      document.getElementById("concentration").style.opacity='0.6'
+      document.getElementById("concentration").style.cursor = 'not-allowed'
+      document.getElementById("concentration").disabled=true
+      toggleMenu(true); // Enable menu after loading
+    });
+
+    document.getElementById("showGraph").addEventListener("click", () => {
+      document.getElementById('printGraph').classList.remove('disabled')
+      document.getElementById('scanType').style.opacity='.6'
+      document.getElementById('scanType').style.cursor='not-allowed'
+
+      document.getElementById('scanType').disabled=true
+
+      if (solutionLoadCount > 0) {
+        updateGraph();
+        Swal.fire({
+          title: "Graphs loaded",
+          icon: "success",
+          allowOutsideClick: false
+        });
+      } else {
+        Swal.fire({
+          title: "Load the Solution first",
+          width: 600,
+          padding: "3em",
+          color: "#716add",
+          background: "bg.png",
+          backdrop: `
+                        rgba(0,0,123,0.4)
+                        left top
+                        no-repeat
+                    `,
+          icon: "warning",
+          allowOutsideClick: false
+
+        });
+      }
+
+      if (complete == 1) {
+        document.getElementById('showGraph').addEventListener('click', function () {
+          location.reload()
+        })
+      }
+    });
+
+    // Reset button functionality
+    document.getElementById("resetGraph").addEventListener("click", () => {
+      location.reload(); // Reloads the page to reset the graph
+    });
+
+    // Print graph button functionality
+    document.getElementById("printGraph").addEventListener("click", () => {
+      window.print(); // Opens the print dialog
+    });
+  </script>
+</body>
+
+</html>

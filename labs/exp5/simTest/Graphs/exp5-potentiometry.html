@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titration Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center horizontally */
+            background-color: #b8e6b9a4;
+        }
+
+        #container {
+            width: 80%;
+            max-width: 1200px;
+            /* Limit the width of the container */
+            margin: 20px auto;
+            /* Center horizontally */
+            border-radius: 25px;
+            background-color: #f44336;
+            display: flex;
+        }
+
+        #simulation {
+            width: 100%;
+            height: 600px;
+            /* Fixed height for the simulation */
+            position: relative;
+            /* Allow positioning of children */
+            margin-bottom: 20px;
+            /* Add some spacing between simulation and graph */
+            background-color: aliceblue;
+        }
+
+        #canvasContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #graphs {
+            background-color: rgb(255, 255, 255);
+            /* display: flex; */
+            justify-content: space-around;
+            /* Place graphs side by side */
+            width: 100%;
+            height: 100%;
+        }
+
+        #graph1,
+        #graph2 {
+            width: 98%;
+            /* Each graph takes about half the width */
+            height: 300px;
+        }
+
+        /* Important: This CSS will set the height of the Chart.js canvas */
+        #myChart1,
+        #myChart2 {
+            height: 200px;
+        }
+
+        .button-container {
+            position: absolute;
+            /* Position the button relative to the container */
+            bottom: 10px;
+            right: 0px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button.secondary {
+            background-color: #f44336;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="simulation">
+            <div id="canvasContainer"></div>
+        </div>
+        <div id="graphs">
+            <div id="graph1">
+                <canvas id="myChart1"></canvas>
+            </div>
+            <div id="graph2">
+                <canvas id="myChart2"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="button-container">
+        <button class="button secondary" id="Start">Start</button>
+    </div>
+
+    <script>
+        // Global variables
+        let normality_titrant;
+        let volume_titrant;
+        let vadded = 0;
+        let normality_titrate = 0.1; // Fixed normality
+        let volume_titrate = 1; // Fixed volume
+        let size;
+        let complete = 0;
+
+        let shakingRotation = 0;
+        let shakingRotationSpeed = 0.15;
+        let flaskTouched = false;
+        let bureteTouched = false;
+        let liquidLevel;
+        let buretteLiquidColor;
+        let liquidDropInterval = 500;
+        let buretesize = 10;
+        let buretemainsize = 10;
+
+        let flaskheight;
+        let flaskwidth;
+        let flaskX;
+        let flaskY;
+        let cropHeight;
+
+        let croppedImg;
+        let bureteImg, flaskImg, bottomImg, backgroundImage, flaskImgbk;
+
+        let changetint;
+        let aftercolour;
+        let change = 1; // Fixed nozzle opening
+
+        let buretetouchX = 10 * size;
+        let buretetouchY = 12.5 * size;
+        let flasktouchX = 9 * size;
+        let flasktouchY = 18.3 * size;
+
+        let darkness = 140;
+        let canvasLocation;
+
+        let onerun = true;
+        let canvas;
+
+        let container;
+        let waterlevel;
+        let number = 0;
+
+        let waterheight;
+        let ppt = true;
+
+        let intervalId; // To store the interval ID
+
+        // Chart.js Setup for both graphs
+        let myChart1, myChart2;
+
+        const data1 = [
+            { x: 0, y: 0 },
+            { x: 0.5, y: 0.5 },
+            { x: 1, y: 1 },
+            { x: 1.5, y: 1.7 },
+            { x: 2, y: 2.5 },
+            { x: 2.5, y: 3.3 },
+            { x: 3, y: 4.5 },
+            { x: 3.5, y: 7.2 },
+            { x: 4, y: 12 },
+            { x: 4.5, y: 17.5 },
+            { x: 5, y: 20.6 },
+            { x: 5.5, y: 21.8 },
+            { x: 6, y: 22.2 },
+            { x: 6.5, y: 22.4 },
+            { x: 7, y: 22.5 },
+            { x: 7.5, y: 22.5 },
+        ];
+
+        const data2 = [
+            { x: 0, y: 0 },
+            // { x: 0.5, y: 0.5 },
+            { x: 1, y: 1 },
+            // { x: 1.5, y: 2.7 },
+            { x: 2, y: 4 },
+
+            { x: 3, y: 7 },
+            // { x: 3.5, y: 7.2 },
+            { x: 4, y: 25 },
+            // Symmetric decrease
+            { x: 4.5, y: 4.5 },
+            { x: 5, y: 4 },
+            // { x: 5.5, y: 3.85 },
+            { x: 6, y: 3.6 },
+            // { x: 6.5, y: 3.1 },
+            { x: 7, y: 2.5 },
+            // { x: 7.5, y: 1 },
+        ];
+        let chartData1 = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Potential (µS cm⁻¹)',
+                    data: [],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        };
+
+        let chartData2 = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'd(e)/d(v) (NTU)', // Assuming the second graph is turbidity
+                    data: [],
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }
+            ]
+        };
+
+        // Load images
+        function preload() {
+            bureteImg = loadImage('./images/burette51.png', loaded);
+            flaskImgbk = loadImage('./images/Asset 11.png', loaded);
+            flaskImg = loadImage('./images/Asset 11.png', loaded);
+            bottomImg = loadImage('./images/water.png', loaded);
+            backgroundImage = loadImage('./images/bg.png', loaded);
+        }
+
+        let loadedImages = 0;
+        function loaded() {
+            loadedImages++;
+            if (loadedImages === 5) {
+                console.log('All images loaded!');
+            }
+        }
+
+        // Setup function
+        function setup() {
+            number = 0;
+            vadded = 0; // Reset the volume added
+
+            // Initialize variables
+            container = select('#canvasContainer');
+            if (windowWidth < 500) {
+                size = (container.width - 10) / 2;
+            } else {
+                size = (container.height - 10) / 24;
+            }
+
+            canvas = createCanvas(20 * size, 24 * size);
+            canvas.parent("#canvasContainer");
+
+            background(backgroundImage);
+
+            buretteLiquidColor = color(255, 255, 255, 100);
+            liquidLevel = 8 * size;
+            flaskheight = 5 * size / 1.1;
+            flaskwidth = 3.9 * size / 1.1;
+            flaskX = width / 2 - .7 * size;
+            flaskY = height / 2 + 5.3 * size;
+            cropHeight = flaskheight - volume_titrate * 0.0675 * size;
+            buretetouchX = 11 * size;
+            buretetouchY = 13 * size;
+            flasktouchX = 10.5 * size;
+            flasktouchY = 19.5 * size;
+
+            changetint = color(255, 255, 0, 200);
+            aftercolour = color(228, 88, 114, darkness);
+
+            // Setup button event listener
+            let startButton = document.getElementById("Start");
+            startButton.addEventListener("click", toggleStartStop);
+
+            canvasLocation = canvas.position();
+        }
+
+        // Draw function
+        function draw() {
+            frameRate(30);
+            background(backgroundImage);
+
+            // Draw burette liquid
+            if (liquidLevel >= 1 && bureteTouched == true) {
+                noStroke();
+                fill(buretteLiquidColor);
+                rect(width / 2 + .95 * size, 12.8 * size, change * size * .2 * random(.8, 1.1), random(8.7, 8.8) * size);
+            }
+
+            waterlevel = cropHeight;
+
+            // Draw ppt (precipitation) if enabled
+            if (ppt) {
+                drawppt();
+            }
+
+            // Resize images
+            flaskImg.resize(flaskwidth + 6, flaskheight);
+            flaskImgbk.resize(flaskwidth, flaskheight);
+            bottomImg.resize(flaskwidth, flaskheight);
+
+            // Calculate water height
+            waterheight = (flaskheight - cropHeight) * .7;
+
+            // Draw burette
+            noStroke();
+            fill(buretteLiquidColor);
+            rect(width / 2 + .7 * size, 12.7 * size, size * 0.65, -liquidLevel * 1.35);
+            push();
+            image(bureteImg, width / 2 - 6.2 * size, .7 * size, 9.88 * size / 1, buretesize * 2.3 * size / 1);
+            pop();
+
+            // Draw flask with shaking animation
+            if (flaskTouched) {
+                drawShakingFlask();
+            } else {
+                // Draw static flask
+                image(flaskImgbk, flaskX, flaskY, flaskwidth, flaskheight);
+                image(flaskImg, flaskX, flaskY, flaskwidth, flaskheight);
+
+                push();
+                tint(changetint);
+                if (waterheight < flaskheight) {
+                    let c = bottomImg.get(0, flaskheight - waterheight, flaskwidth, flaskheight);
+                    image(c, flaskX, flaskY + flaskheight - waterheight);
+                } else {
+                    image(bottomImg, flaskX, flaskY + flaskheight - waterheight);
+                }
+                pop();
+            }
+
+            // Update "Start" button text
+            updateStartButton();
+
+            // Call setup() only once at the beginning
+            if (onerun) {
+                setup();
+                onerun = !onerun;
+            }
+        }
+
+        // Mouse Pressed event handler
+        function mousePressed() {
+            let dis_burete = dist(mouseX, mouseY, buretetouchX, buretetouchY);
+            if (dis_burete <= 1.5 * size) {
+                toggleStartStop();
+            }
+
+            let dis_flask = dist(mouseX, mouseY, flasktouchX, flasktouchY);
+            if (dis_flask <= 2.3 * size) {
+                flaskTouched = !flaskTouched;
+            }
+        }
+
+        // Mouse Released event handler
+        function mouseReleased() {
+            buretesize = buretemainsize;
+        }
+
+        // Add liquid drop function
+        function addLiquidDrop() {
+            vadded += change; // Increment vadded at the start
+            if (liquidLevel >= 1 && bureteTouched == true) {
+                liquidLevel -= change * size / 5;
+                cropHeight -= 2.0 * change;
+                number += change;
+
+                // Update tint and darkness
+                if (vadded >= volume_titrant) {
+                    changetint = aftercolour;
+                    if (darkness <= 255) {
+                        darkness += 10;
+                    }
+                }
+
+                // Update chart data for both charts
+                chartData1.labels.push(vadded.toFixed(2));
+                chartData1.datasets[0].data.push(calculateValue1(vadded));
+                myChart1.update();
+
+                chartData2.labels.push(vadded.toFixed(2));
+                chartData2.datasets[0].data.push(calculateValue2(vadded));
+                myChart2.update();
+
+                // Stop the titration after reaching the final volume
+                if (vadded >= volume_titrant) {
+                    stopTitration();
+                }
+            }
+        }
+
+        // Function to draw shaking flask
+        function drawShakingFlask() {
+            let shakingRotationOffset = sin(shakingRotation) * 6;
+            push();
+            translate(width / 2, 14 * size + 4 * size / 2);
+            rotate(radians(shakingRotationOffset));
+            image(flaskImgbk, flaskX - width / 2, flaskY - 16 * size, flaskwidth, flaskheight);
+
+            push();
+            tint(changetint);
+            if (waterheight < flaskheight) {
+                let c = bottomImg.get(0, flaskheight - waterheight, flaskwidth, flaskheight);
+                image(c, flaskX - width / 2, flaskY + flaskheight - waterheight - (16 * size));
+            } else {
+                image(bottomImg, flaskX - width / 2, flaskY + flaskheight - waterheight);
+            }
+            pop();
+            image(flaskImg, flaskX - width / 2, flaskY - 16 * size, flaskwidth, flaskheight);
+            pop();
+            shakingRotation += shakingRotationSpeed;
+        }
+
+        // Function to create a chart (reuse this function)
+        function createChart(chartId, data, label) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: label
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Volume of Titrant Added (mL)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Start titration function (modified to initialize both charts)
+        function startTitration() {
+            Swal.fire({
+                title: "Start  Titration",
+
+                icon: "success",
+                allowOutsideClick: false
+            });
+            // Initialize titrant variables
+            normality_titrant = random(0.80, .90);
+            volume_titrant = (normality_titrant * volume_titrate) / normality_titrate;
+
+            bureteTouched = true;
+            intervalId = setInterval(addLiquidDrop, liquidDropInterval);
+
+            // Create both charts
+            myChart1 = createChart('myChart1', chartData1, 'Potential (µS cm⁻¹)');
+            myChart2 = createChart('myChart2', chartData2, 'd(e)/d(v) (NTU)');
+
+        }
+
+        // Stop titration function
+        function stopTitration() {
+            bureteTouched = false;
+            Swal.fire({
+                title: "Stop titration",
+                icon: "warning",
+                allowOutsideClick: false
+            });
+            clearInterval(intervalId);
+
+            // Clear chart data (Optional)
+            // If you want to completely clear the chart for a new titration
+            // chartData1.labels = [];
+            // chartData1.datasets[0].data = [];
+            // chartData2.labels = [];
+            // chartData2.datasets[0].data = [];
+            // myChart1.update(); 
+            // myChart2.update(); 
+        }
+
+        // Toggle start/stop button function
+        function toggleStartStop() {
+            let startButton = document.getElementById("Start");
+            if (bureteTouched) {
+                stopTitration();
+            } else {
+
+                startTitration();
+            }
+        }
+
+        // Function to update "Start" button text
+        function updateStartButton() {
+            let startButton = document.getElementById("Start");
+            startButton.textContent = bureteTouched ? "Stop" : "Start";
+        }
+
+        // Draw ppt (precipitation) function
+        function drawppt() {
+            size_vary = Math.floor(random(0.2152, 0.2511) * size);
+            size_vary2 = Math.floor(random(0.2152, 0.2511) * size);
+            frameRate(30);
+            fill(170, 74, 68, 255);
+            noStroke();
+            const upperBound = Math.floor(random(1, 2) + number * 1.25 - 5);
+
+            for (let i = 0; i < upperBound * 6; i++) {
+                variation = Math.floor(random(-1.4349, 1.4349) * size);
+                variation2 = Math.floor(random(0.1793, 0.3587) * size);
+
+                ellipse(flaskX + variation + 1.8 * size, flaskY + variation2 + 3.9 * size, size_vary / 4, size_vary2 / 4);
+            }
+        }
+
+        // Function to calculate pH (replace with your actual calculation logic)
+        function calculateValue1(vadded) {
+            let index = 0;
+            while (index < data1.length - 1 && data1[index + 1].x <= vadded) {
+                index++;
+            }
+            // Linear interpolation
+            if (index < data1.length - 1) {
+                const slope = (data1[index + 1].y - data1[index].y) / (data1[index + 1].x - data1[index].x);
+                return data1[index].y + slope * (vadded - data1[index].x);
+            } else if (index >= data1.length - 1) {
+                return data1[index].y;
+            } else {
+                return null;
+            }
+        }
+
+        function calculateValue2(vadded) {
+            let index = 0;
+            while (index < data2.length - 1 && data2[index + 1].x <= vadded) {
+                index++;
+            }
+            // Linear interpolation
+            if (index < data2.length - 1) {
+                const slope = (data2[index + 1].y - data2[index].y) / (data2[index + 1].x - data2[index].x);
+                return data2[index].y + slope * (vadded - data2[index].x);
+            } else if (index >= data2.length - 1) {
+                return data2[index].y;
+            } else {
+                return null;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

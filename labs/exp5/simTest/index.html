@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chloride content by Mohr's Method</title>
+  <link rel="stylesheet" href="Other.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    .all-btns {
+      display: none;
+    }
+
+    .choose button:nth-child(2) {
+      background-color: #c0c0c0;
+      /* Silver color for Silver Nitrate */
+    }
+
+    .choose button:hover {
+      transform: scale(1.1);
+    }
+
+    .choose button:active {
+      transform: scale(0.95);
+      background-color: #b8860b;
+      /* Darker shade for Gold Nitrate when clicked */
+    }
+
+    .choose button:nth-child(2):active {
+      background-color: #a9a9a9;
+      /* Darker shade for Silver Nitrate when clicked */
+    }
+
+    .graph {
+      display: none;
+      /* Initially hidden */
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      /* Stack buttons vertically */
+    }
+
+    .graph button {
+      background-color: #4caf50;
+      /* Green color for the buttons */
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      margin: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .graph button:hover {
+      transform: scale(1.1);
+      background-color: #45a049;
+      /* Darker green on hover */
+    }
+
+    .graph button:active {
+      transform: scale(0.95);
+      background-color: #388e3c;
+      /* Even darker green when clicked */
+    }
+
+    .graph a {
+      text-decoration: none;
+    }
+
+    /* Specific styles for gold-graph button */
+    #gold-graph {
+      background-color: #d4af37;
+      /* Gold color */
+      display: none;
+    }
+
+    #gold-graph:hover {
+      background-color: #b8860b;
+      /* Darker gold on hover */
+    }
+
+    #gold-graph:active {
+      background-color: #8b6d3e;
+      /* Even darker gold when clicked */
+    }
+
+    /* Specific styles for nitrate-graph button */
+  </style>
+</head>
+
+<body>
+  <h1 class="heading">Estimation of Ferrous Ammonium Sulfate (FAS) using standard Potassium Dichromate solution
+    Potentiometrically.</h1>
+
+  <div id="thumbnail-container">
+    <!-- <button class="btn btn-primary btn-sm" id="runsetup" onclick="toggleFullScreen()">
+      <i class="fa-solid fa-xl fa-maximize" style="color: #9ec1a3;"></i>
+    </button> -->
+
+    <div id="video-container">
+      <video id="video" width="800" height="600" controls>
+        <source src="intro.mp4" type="video/mp4" id='source'>
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+    <img src="./images/bg1.png" id="Thumbnail" alt="Thumbnail">
+    <button id="play-button" onclick="startVideo()">▶</button>
+
+
+  </div>
+
+  <!-- Place buttons below the video -->
+
+  <div class="graph">
+    <a href="./Graphs/exp5-potentiometry.html">
+      <button id="gold-graph">Show Graph</button>
+    </a>
+  </div>
+
+
+  <script>
+    var videos = ["intro.mp4"];
+    var currentVideoIndex = 0;
+    var video = document.getElementById('video');
+    var videoContainer = document.getElementById('video-container');
+    var startButton = document.getElementById('play-button');
+    var nextButton = document.getElementById('next-button');
+    var thumbnail = document.getElementById('Thumbnail');
+    var source = document.getElementById('source');
+    let gold = document.getElementById('gold-button')
+
+
+    // Function to set up the 'ended' event listener
+    function setupVideoEndedListener() {
+      video.addEventListener('ended', function onEnded() {
+        if (currentVideoIndex === 0) {
+          nextButton.style.display = 'block';
+        } else if (currentVideoIndex === 1) {
+          window.location.href = 'StartHtml.html';
+        }
+      });
+    }
+
+    // Call it initially for the first video
+    setupVideoEndedListener();
+
+    function startVideo() {
+      videoContainer.style.display = 'block';
+      video.src = videos[currentVideoIndex];
+      video.play();
+      startButton.style.display = 'none';
+      thumbnail.style.display = 'none';
+      document.getElementById('gold-graph').style.display = 'block'
+
+    }
+
+    function nextVideo() {
+      if (currentVideoIndex == 0) {
+        currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+        video.src = videos[currentVideoIndex];
+        video.play();
+        nextButton.style.display = 'none';
+      } else if (currentVideoIndex == 1) {
+        window.location.href = 'StartHtml.html';
+      }
+    }
+
+    setTimeout(() => {
+      const skipB = document.getElementById('skipB');
+    }, 3000);
+
+    function skip() {
+      window.location.href = 'StartHtml.html';
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
+          document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+          document.documentElement.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+
+  </script>
+
+</body>
+
+</html>

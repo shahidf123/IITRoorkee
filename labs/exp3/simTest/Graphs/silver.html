@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silver Nanoparticle Absorbance Graph</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #D1EED1;
+    }
+
+    .chart {
+      width: 90%;
+      height: 500px;
+      margin: 20px auto;
+    }
+
+    .axis text {
+      font-size: 12px;
+    }
+
+    .axis line, .axis path {
+      stroke: #ccc;
+    }
+
+    .line {
+      fill: none;
+      stroke: #00f;  /* Changed to blue for silver nanoparticle data */
+      stroke-width: 2px;
+    }
+
+    .axis-label {
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="chart"></div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const wavelengths_silver = [350, 370, 390, 410, 430, 450, 470, 490, 510, 530];
+    const absorbance_silver = [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 0.9, 0.7, 0.5, 0.3];
+
+    const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+    const width = 900 - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select(".chart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Data Preparation
+    const data = wavelengths_silver.map((wavelength, index) => ({
+      wavelength: wavelength,
+      absorbance: absorbance_silver[index]
+    }));
+
+    // Scales
+    const xScale = d3.scaleLinear()
+      .domain([d3.min(data, d => d.wavelength), d3.max(data, d => d.wavelength)])
+      .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.absorbance)]) 
+      .range([height, 0]); 
+
+    // Line Generator with Bezier curve
+    const lineGenerator = d3.line()
+      .x(d => xScale(d.wavelength))
+      .y(d => yScale(d.absorbance))
+      .curve(d3.curveBasis); // Use curveBasis for Bezier curves
+
+    // Append the line path
+    const path = svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", lineGenerator)
+      .attr("stroke-dasharray", function() {
+        return this.getTotalLength();
+      })
+      .attr("stroke-dashoffset", function() {
+        return this.getTotalLength();
+      });
+
+    // Animate the line
+    path.transition()
+      .duration(2000)
+      .ease(d3.easeLinear)
+      .attr("stroke-dashoffset", 0);
+
+    // Axes
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(xScale));
+
+    svg.append("g")
+      .call(d3.axisLeft(yScale));
+
+    // X Axis Label
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("text-anchor", "middle")
+      .attr("x", width / 2)
+      .attr("y", height + 50) // Positioned below the X-axis
+      .text("Wavelength (nm)");
+
+    // Y Axis Label
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("text-anchor", "middle")
+      .attr("transform", "rotate(-90)") // Rotate for Y-axis
+      .attr("x", -height / 2)
+      .attr("y", -40) // Positioned to the left of the Y-axis
+      .text("Absorbance");
+
+  </script>
+</body>
+</html>
