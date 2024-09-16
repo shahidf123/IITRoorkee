@@ -548,8 +548,21 @@
             Swal.fire({
                 title: "Stop titration",
                 icon: "warning",
-                allowOutsideClick: false
+                allowOutsideClick: false,
+                // Add buttons for printing each graph
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: 'Print Graph 1',
+                denyButtonText: 'Print Graph 2',
+                cancelButtonText: 'Close',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    printGraph(myChart1);
+                } else if (result.isDenied) {
+                    printGraph(myChart2);
+                }
             });
+
             clearInterval(intervalId);
 
             // Clear chart data (Optional)
@@ -560,6 +573,20 @@
             // chartData2.datasets[0].data = [];
             // myChart1.update(); 
             // myChart2.update(); 
+        }
+
+        // Function to print the graph
+        function printGraph(chart) {
+            const canvas = chart.canvas;
+            const dataURL = canvas.toDataURL();
+
+            // Create a new window and write the image to it
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write(`<img src="${dataURL}" />`);
+            printWindow.document.close();
+
+            // Print the window
+            printWindow.print();
         }
 
         // Toggle start/stop button function

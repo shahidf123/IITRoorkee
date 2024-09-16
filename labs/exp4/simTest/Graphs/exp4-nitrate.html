@@ -71,6 +71,7 @@
       cursor: pointer;
       border-radius: 5px;
       transition: background-color 0.3s ease;
+      margin-bottom: 10px;
     }
 
     .sidebar button:hover {
@@ -134,7 +135,6 @@
       font-size: 14px;
       font-weight: bold;
       text-anchor: start;
-      /* transform: translateY(-50%); */
     }
 
     .legend-item {
@@ -151,7 +151,6 @@
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 </head>
 
 <body>
@@ -170,6 +169,7 @@
       </select>
 
       <button id="showGraph">Show Graph</button>
+      <button id="printGraph" style="display: none;">Print Graph</button>
     </div>
 
     <div class="chart">
@@ -185,8 +185,7 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
   <script>
-    // Sample CV data 
-    let complete = 0;
+    // 1. Data and Constants:
     const cvData = {
       scanRate10: {
         forward: [
@@ -281,15 +280,35 @@
     const colors = ["blue", "red", "brown", "green"];
     const lineStyles = ["solid", "dashed", "dotted", "dashdot"];
 
+    // 2. D3 Selections:
     const svg = d3.select("svg");
     const curveContainer = svg.select(".curve-container");
     const legendGroup = svg.select(".legend-group");
 
+    // 3. State Variables:
     let concentration = 1;
     let scanType = "single";
     let xScale, yScale, xAxis, yAxis, lineGenerator;
     let dataLoaded = false;
 
+    // 4. Helper Function to Draw Curve:
+    function drawCurve(data, strokeColor, lineStyle) {
+      const path = curveContainer
+        .append("path")
+        .datum(data)
+        .attr("d", lineGenerator)
+        .attr("stroke", strokeColor)
+        .attr("stroke-dasharray", lineStyle)
+        .attr("stroke-dashoffset", 1000);
+
+      path
+        .transition()
+        .duration(5000)
+        .ease(d3.easeLinear)
+        .attr("stroke-dashoffset", 0);
+    }
+
+    // 5. Update Graph Function:
     function updateGraph() {
       if (!dataLoaded) {
         Swal.fire({
@@ -297,10 +316,10 @@
           width: 600,
           padding: "3em",
           color: "#716add",
-          background: "bg.png",
+          // background: "bg.png", 
           backdrop: `
             rgba(0,0,123,0.4)
-            url("/images/nyan-cat.gif")
+            url("/images/nyan-cat.gif") 
             left top
             no-repeat
           `,
@@ -399,21 +418,6 @@
         .y((d) => yScale(d.y))
         .curve(d3.curveBasis);
 
-      function drawCurve(data, strokeColor, lineStyle) {
-        const path = curveContainer
-          .append("path")
-          .datum(data)
-          .attr("d", lineGenerator)
-          .attr("stroke", strokeColor)
-          .attr("stroke-dasharray", lineStyle)
-          .attr("stroke-dashoffset", 1000);
-
-        path
-          .transition()
-          .duration(5000)
-          .ease(d3.easeLinear)
-          .attr("stroke-dashoffset", 0);
-      }
       Swal.fire({
         title: "Graphs loaded",
         icon: "success",
@@ -450,34 +454,29 @@
 
         lineIndex++;
       }
-      complete = 1
-
     }
 
+    // 6. Event Listeners: 
     document.getElementById("concentration").addEventListener("input", (e) => {
       concentration = parseFloat(e.target.value);
     });
 
-    document
-      .getElementById("loadNitrateSolution")
-      .addEventListener("click", () => {
-        Swal.fire({
-          title: "Solution is loaded",
-          icon: "success",
-          allowOutsideClick: false
-        });
-        dataLoaded = true;
-        document.getElementById("loadNitrateSolution").disabled = true;
-        document.getElementById("loadNitrateSolution").style.opacity = '.6'
-        document.getElementById("loadNitrateSolution").style.cursor = 'not-allowed'
-
-        document.getElementById("concentration").style.cursor = 'not-allowed'
-        document.getElementById("concentration").style.disabled = true
-        document.getElementById("concentration").style.opacity = '.6'
-
-
-
+    document.getElementById("loadNitrateSolution").addEventListener("click", () => {
+      Swal.fire({
+        title: "Solution is loaded",
+        icon: "success",
+        allowOutsideClick: false
       });
+      dataLoaded = true;
+      document.getElementById("loadNitrateSolution").disabled = true;
+      document.getElementById("loadNitrateSolution").style.opacity = '.6'
+      document.getElementById("loadNitrateSolution").style.cursor = 'not-allowed'
+
+      document.getElementById("concentration").style.cursor = 'not-allowed'
+      document.getElementById("concentration").style.disabled = true
+      document.getElementById("concentration").style.opacity = '.6'
+
+    });
 
     document.getElementById("scanType").addEventListener("change", (e) => {
       scanType = e.target.value;
@@ -485,11 +484,9 @@
 
     document.getElementById("showGraph").addEventListener("click", () => {
       updateGraph();
-      // if (complete == 1) {
-      //   document.getElementById('showGraph').addEventListener('click', () => {
-      //     location.reload()
-      //   })
-      // }
+      document.getElementById("showGraph").style.display = "none"; // Hide after click
+      document.getElementById("printGraph").style.display = "block"; // Show print button
+
       document.getElementById("showGraph").style.disabled = true;
       document.getElementById("showGraph").style.opacity = '.6'
       document.getElementById("showGraph").style.cursor = 'not-allowed'
@@ -500,6 +497,25 @@
 
     });
 
+    document.getElementById("printGraph").addEventListener("click", () => {
+      // 1. Clone the chart content:
+      const chartContent = document.querySelector(".chart").cloneNode(true);
+
+      // 2. Create a new window for printing:
+      const printWindow = window.open("", "_blank");
+
+      // 3. Inject the chart content and CSS styles into the new window:
+      printWindow.document.body.innerHTML = `
+        <style>
+          /* Paste your entire CSS code here */ 
+          ${document.querySelector("style").innerHTML} 
+        </style>
+        ${chartContent.outerHTML}
+      `;
+
+      // 4. Trigger the print dialog:
+      printWindow.print();
+    });
   </script>
 </body>
 
