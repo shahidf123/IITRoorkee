@@ -16,6 +16,8 @@
             align-items: center;
             /* Center horizontally */
             background-color: #b8e6b9a4;
+            overflow-y: auto;
+            /* Enable vertical scrolling */
         }
 
         #container {
@@ -83,6 +85,51 @@
         .button.secondary {
             background-color: #f44336;
         }
+
+        /* Add styles for the calculator container */
+        #calculator {
+            width: 80%;
+            max-width: 600px;
+            /* Adjust as needed */
+            margin: 20px auto;
+            padding: 20px;
+            margin-top: 75px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        #calculator h2 {
+            margin-bottom: 10px;
+        }
+
+        #calculator label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #calculator input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        #calculator button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 15px;
+            font-weight: bold;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -101,6 +148,29 @@
     <div class="button-container">
         <button class="button secondary" id="Start">Start</button>
     </div>
+
+    <!-- Add the calculator container -->
+    <div id="calculator">
+        <h2>Calculate N2 from N1, V1, and V2</h2>
+        <form id="calculationForm">
+            <label for="n1">Normality of Hypo solution in burette:</label>
+            <input type="number" id="n1" name="n1" required>
+
+            <label for="v1">Volume of CuSO4 solution in conical flask:</label>
+            <input type="number" id="v1" name="v1" required>
+
+            <label for="v2">1. Volume of Hypo solution added in CuSO4 solution:</label>
+            <input type="number" id="v2" name="v2" required>
+
+            <label for="v3">2. Volume of CuSO4 solution in conical flask:</label>
+            <input type="number" id="v3" name="v3" required>
+
+            <button type="button" onclick="calculateN2()">Calculate N2</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
     <script>
         // Global variables
         let normality_titrant;
@@ -390,29 +460,29 @@
 
         // Start titration function
         function startTitration() {
-    normality_titrant = random(0.80, .90);
-    volume_titrant = (normality_titrant * volume_titrate) / normality_titrate;
+            normality_titrant = random(0.80, .90);
+            volume_titrant = (normality_titrant * volume_titrate) / normality_titrate;
 
-    // Reset titration variables
-    currentDataIndex = 0;
-    vadded = 0;
-    liquidLevel = 8 * size; // Reset liquid level
-    cropHeight = flaskheight - volume_titrate * 0.0675 * size; // Reset cropHeight
+            // Reset titration variables
+            currentDataIndex = 0;
+            vadded = 0;
+            liquidLevel = 8 * size; // Reset liquid level
+            cropHeight = flaskheight - volume_titrate * 0.0675 * size; // Reset cropHeight
 
-    bureteTouched = true;
-    intervalId = setInterval(addLiquidDrop, liquidDropInterval);
+            bureteTouched = true;
+            intervalId = setInterval(addLiquidDrop, liquidDropInterval);
 
-    // Reset chart data and update the chart
-    chartData.labels = [];
-    chartData.datasets[0].data = [];
-    myChart.update();
+            // Reset chart data and update the chart
+            chartData.labels = [];
+            chartData.datasets[0].data.push(data1[0].y);
+            myChart.update();
 
-    Swal.fire({
-        title: "Titration started",
-        icon: "success",
-        allowOutsideClick: false
-    });
-}
+            Swal.fire({
+                title: "Titration started",
+                icon: "success",
+                allowOutsideClick: false
+            });
+        }
 
 
         // Stop titration function
@@ -457,6 +527,22 @@
 
         }
 
+        // Calculator function
+        function calculateN2() {
+            var n1 = parseFloat(document.getElementById("n1").value);
+            var v1 = parseFloat(document.getElementById("v1").value);
+            var v2 = parseFloat(document.getElementById("v2").value);
+            var v3 = parseFloat(document.getElementById("v3").value);
+
+            if (isNaN(n1) || isNaN(v1) || isNaN(v2) || isNaN(v3)) {
+                document.getElementById("result").innerHTML = "Please enter valid numbers.";
+                return;
+            }
+
+            var n2 = (n1 * v2) / v3;
+
+            document.getElementById("result").innerHTML = "Normality of CuSO4 solution (N2): " + n2.toFixed(2);
+        }
     </script>
 
 </body>

@@ -12,33 +12,21 @@
         body {
             font-family: sans-serif;
             display: flex;
-            overflow-y: auto;
             flex-direction: column;
-            align-items: center;
-            /* Center horizontally */
-            background-color: #b8e6b9a4;
+            align-items: center; /* Center horizontally */
         }
 
         #container {
             width: 80%;
-            max-width: 1200px;
-            /* Limit the width of the container */
-            margin: 20px auto;
-            /* Center horizontally */
-            border-radius: 25px;
-            background-color: #f44336;
-            display: flex;
+            max-width: 800px; /* Limit the width of the container */
+            margin: 20px auto; /* Center horizontally */
         }
 
         #simulation {
             width: 100%;
-            height: 600px;
-            /* Fixed height for the simulation */
-            position: relative;
-            /* Allow positioning of children */
-            margin-bottom: 20px;
-            /* Add some spacing between simulation and graph */
-            background-color: aliceblue;
+            height: 400px; /* Fixed height for the simulation */
+            position: relative; /* Allow positioning of children */
+            margin-bottom: 20px; /* Add some spacing between simulation and graph */
         }
 
         #canvasContainer {
@@ -50,32 +38,25 @@
         }
 
         #graphs {
-            background-color: rgb(255, 255, 255);
-            /* display: flex; */
-            justify-content: space-around;
-            /* Place graphs side by side */
+            display: flex;
+            justify-content: space-around; /* Place graphs side by side */
             width: 100%;
-            height: 100%;
         }
-
-        #graph1,
-        #graph2 {
-            width: 98%;
-            /* Each graph takes about half the width */
-            height: 300px;
+        
+        #graph1, #graph2 {
+            width: 48%; /* Each graph takes about half the width */
+            height: 200px;
         }
 
         /* Important: This CSS will set the height of the Chart.js canvas */
-        #myChart1,
-        #myChart2 {
+        #myChart1, #myChart2 {
             height: 200px;
         }
 
         .button-container {
-            position: absolute;
-            /* Position the button relative to the container */
+            position: absolute; /* Position the button relative to the container */
             bottom: 10px;
-            right: 0px;
+            right: 10px;
         }
 
         .button {
@@ -95,93 +76,25 @@
         .button.secondary {
             background-color: #f44336;
         }
-
-        /* Add styles for the calculator container */
-        #calculator {
-            width: 80%;
-            max-width: 600px;
-            /* Adjust as needed */
-            margin: 20px auto;
-            padding: 20px;
-            margin-top: 80px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-
-        #calculator h2 {
-            margin-bottom: 10px;
-        }
-
-        #calculator label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        #calculator input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            box-sizing: border-box;
-        }
-
-        #calculator button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        #result {
-            margin-top: 15px;
-            font-weight: bold;
-        }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
     <div id="container">
         <div id="simulation">
             <div id="canvasContainer"></div>
+            <div class="button-container">
+                <button class="button secondary" id="Start">Start</button>
+            </div>
         </div>
         <div id="graphs">
             <div id="graph1">
                 <canvas id="myChart1"></canvas>
             </div>
-            <div id="graph2">
-                <canvas id="myChart2"></canvas>
+            <div id="graph2"> 
+                <canvas id="myChart2"></canvas> 
             </div>
         </div>
-    </div>
-    <div class="button-container">
-        <button class="button secondary" id="Start">Start</button>
-    </div>
-
-    <!-- Add the calculator container -->
-    <div id="calculator">
-        <h2>Calculate N2 from N1, V1, and V2</h2>
-        <form id="calculationForm">
-            <label for="n1">Normality of Hypo solution in burette:</label>
-            <input type="number" id="n1" name="n1" required>
-
-            <label for="v1">Volume of CuSO4 solution in conical flask:</label>
-            <input type="number" id="v1" name="v1" required>
-
-            <label for="v2">1. Volume of Hypo solution added in CuSO4 solution:</label>
-            <input type="number" id="v2" name="v2" required>
-
-            <label for="v3">2. Volume of CuSO4 solution in conical flask:</label>
-            <input type="number" id="v3" name="v3" required>
-
-            <button type="button" onclick="calculateN2()">Calculate N2</button>
-        </form>
-
-        <div id="result"></div>
     </div>
 
     <script>
@@ -189,10 +102,9 @@
         let normality_titrant;
         let volume_titrant;
         let vadded = 0;
-        let normality_titrate = 0.1; // Fixed normality
-        let volume_titrate = 1; // Fixed volume
+        let normality_titrate = 0.1; 
+        let volume_titrate = 1; 
         let size;
-        let complete = 0;
 
         let shakingRotation = 0;
         let shakingRotationSpeed = 0.15;
@@ -200,7 +112,6 @@
         let bureteTouched = false;
         let liquidLevel;
         let buretteLiquidColor;
-        let liquidDropInterval = 500;
         let buretesize = 10;
         let buretemainsize = 10;
 
@@ -215,7 +126,7 @@
 
         let changetint;
         let aftercolour;
-        let change = 1; // Fixed nozzle opening
+        let change = 1; 
 
         let buretetouchX = 10 * size;
         let buretetouchY = 12.5 * size;
@@ -235,54 +146,128 @@
         let waterheight;
         let ppt = true;
 
-        let intervalId; // To store the interval ID
+        let intervalId; 
 
-        // Chart.js Setup for both graphs
-        let myChart1, myChart2;
+        // Chart.js Setup 
+        let myChart1;
+        let myChart2; // Declare myChart2 
 
-        const data1 = [
-            { x: 0, y: 0 },
-            { x: 0.5, y: 0.5 },
-            { x: 1, y: 1 },
-            { x: 1.5, y: 1.7 },
-            { x: 2, y: 2.5 },
-            { x: 2.5, y: 3.3 },
-            { x: 3, y: 4.5 },
-            { x: 3.5, y: 7.2 },
-            { x: 4, y: 12 },
-            { x: 4.5, y: 17.5 },
-            { x: 5, y: 20.6 },
-            { x: 5.5, y: 21.8 },
-            { x: 6, y: 22.2 },
-            { x: 6.5, y: 22.4 },
-            { x: 7, y: 22.5 },
-            { x: 7.5, y: 22.5 },
+        // Data for Chart 1 (Conductivity)
+        const chart1Data = [
+            [0.0, 36.1],
+            [1.0, 34.0],
+            [2.0, 33.0],
+            [3.0, 31.5],
+            [4.0, 30.6],
+            [5.0, 29.4],
+            [6.0, 27.9],
+            [7.0, 26.3],
+            [8.0, 25.0],
+            [9.0, 24.1],
+            [10.0, 22.3],
+            [10.5, 21.8],
+            [11.0, 21.6],
+            [11.5, 20.92],
+            [12.0, 19.87],
+            [12.5, 19.45],
+            [13.0, 19.30],
+            [13.5, 18.73],
+            [14.0, 18.45],
+            [14.5, 17.84],
+            [15.0, 17.27],
+            [15.5, 14.51],
+            [16.0, 14.06],
+            [16.5, 13.54],
+            [17.0, 13.25],
+            [18.0, 12.34],
+            [19.0, 11.74],
+            [20.0, 11.16],
+            [21.0, 10.90],
+            [22.0, 9.64],
+            [23.0, 8.82],
+            [24.0, 8.09],
+            [25.0, 7.58],
+            [26.0, 7.50],
+            [27.0, 6.91],
+            [28.0, 6.80],
+            [29.0, 6.72],
+            [30.0, 6.73],
+            [31.0, 6.73],
+            [32.0, 6.79],
+            [33.0, 6.84],
+            [34.0, 6.86],
+            [35.0, 6.98],
+            [36.0, 6.97],
+            [37.0, 7.03],
+            [38.0, 7.07],
+            [39.0, 7.11],
+            [40.0, 7.17],
+            [41.0, 7.21],
+            [42.0, 7.25],
+            [43.0, 7.29],
+            [44.0, 7.34],
+            [45.0, 7.37],
+            [46.0, 7.38],
+            [47.0, 7.39],
+            [48.0, 7.42],
+            [49.0, 7.47],
+            [50.0, 7.48],
+            [51.0, 7.53],
+            [52.0, 7.59],
+            [53.0, 7.62],
+            [54.0, 7.66],
+            [55.0, 7.66],
+            [56.0, 7.72],
+            [57.0, 7.73],
+            [58.0, 7.75],
+            [59.0, 7.77],
+            [60.0, 7.80],
+            [61.0, 7.84],
+            [62.0, 7.90],
+            [63.0, 7.96],
+            [64.0, 7.94],
+            [65.0, 8.00],
+    [66.0, 8.60],
+    [67.0, 9.20],
+    [68.0, 9.80],
+    [69.0, 10.40],
+    [70.0, 11.00],
+    [71.0, 11.60],
+    [72.0, 12.20],
+    [73.0, 12.80],
+    [74.0, 13.40],
+    [75.0, 14.00],
+    [76.0, 14.60],
+    [77.0, 15.20],
+    [78.0, 15.80],
+    [79.0, 16.40],
+    [80.0, 17.00],
+    [81.0, 17.60],
+    [82.0, 18.20],
+    [83.0, 18.80],
+    [84.0, 19.40],
+    [85.0, 20.00],
+    [86.0, 20.60],
+    [87.0, 21.20],
+    [88.0, 21.80],
+    [89.0, 22.40],
+    [90.0, 23.00]
         ];
 
-        const data2 = [
-            { x: 0, y: 0 },
-            // { x: 0.5, y: 0.5 },
-            { x: 1, y: 1 },
-            // { x: 1.5, y: 2.7 },
-            { x: 2, y: 4 },
+        // Data for Chart 2 (Dummy)
+        const chart2Data = [
+            [0.0, 72.2],
+            [1.0, 20.0],
+            [2.0, 20.0],
+            [3.0, 63.0],
 
-            { x: 3, y: 7 },
-            // { x: 3.5, y: 7.2 },
-            { x: 4, y: 25 },
-            // Symmetric decrease
-            { x: 4.5, y: 4.5 },
-            { x: 5, y: 4 },
-            // { x: 5.5, y: 3.85 },
-            { x: 6, y: 3.6 },
-            // { x: 6.5, y: 3.1 },
-            { x: 7, y: 2.5 },
-            // { x: 7.5, y: 1 },
         ];
+
         let chartData1 = {
             labels: [],
             datasets: [
                 {
-                    label: 'Potential (µS cm⁻¹)',
+                    label: 'Conductivity (µS cm⁻¹)',
                     data: [],
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 1
@@ -290,11 +275,11 @@
             ]
         };
 
-        let chartData2 = {
+        let chartData2 = { // Data for the second chart
             labels: [],
             datasets: [
                 {
-                    label: 'd(e)/d(v) (NTU)', // Assuming the second graph is turbidity
+                    label: 'Dummy Data (arbitrary units)', 
                     data: [],
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
@@ -304,11 +289,11 @@
 
         // Load images
         function preload() {
-            bureteImg = loadImage('./images/burette51.png', loaded);
-            flaskImgbk = loadImage('./images/Asset 11.png', loaded);
-            flaskImg = loadImage('./images/Asset 11.png', loaded);
-            bottomImg = loadImage('./images/water.png', loaded);
-            backgroundImage = loadImage('./images/bg.png', loaded);
+            bureteImg = loadImage('burette51.png', loaded);
+            flaskImgbk = loadImage('backflask.png', loaded);
+            flaskImg = loadImage('frontflask.png', loaded);
+            bottomImg = loadImage('water.png', loaded);
+            backgroundImage = loadImage('bg.png', loaded);
         }
 
         let loadedImages = 0;
@@ -441,38 +426,6 @@
             buretesize = buretemainsize;
         }
 
-        // Add liquid drop function
-        function addLiquidDrop() {
-            vadded += change; // Increment vadded at the start
-            if (liquidLevel >= 1 && bureteTouched == true) {
-                liquidLevel -= change * size / 5;
-                cropHeight -= 2.0 * change;
-                number += change;
-
-                // Update tint and darkness
-                if (vadded >= volume_titrant) {
-                    changetint = aftercolour;
-                    if (darkness <= 255) {
-                        darkness += 10;
-                    }
-                }
-
-                // Update chart data for both charts
-                chartData1.labels.push(vadded.toFixed(2));
-                chartData1.datasets[0].data.push(calculateValue1(vadded));
-                myChart1.update();
-
-                chartData2.labels.push(vadded.toFixed(2));
-                chartData2.datasets[0].data.push(calculateValue2(vadded));
-                myChart2.update();
-
-                // Stop the titration after reaching the final volume
-                if (vadded >= volume_titrant) {
-                    stopTitration();
-                }
-            }
-        }
-
         // Function to draw shaking flask
         function drawShakingFlask() {
             let shakingRotationOffset = sin(shakingRotation) * 6;
@@ -495,7 +448,7 @@
             shakingRotation += shakingRotationSpeed;
         }
 
-        // Function to create a chart (reuse this function)
+        // Function to create a chart
         function createChart(chartId, data, label) {
             const ctx = document.getElementById(chartId).getContext('2d');
             return new Chart(ctx, {
@@ -521,59 +474,71 @@
             });
         }
 
-        // Start titration function (modified to initialize both charts)
+        // Start titration function (Modified for burette filling animation)
         function startTitration() {
-            Swal.fire({
-                title: "Start  Titration",
-
-                icon: "success",
-                allowOutsideClick: false
-            });
             // Initialize titrant variables
             normality_titrant = random(0.80, .90);
             volume_titrant = (normality_titrant * volume_titrate) / normality_titrate;
 
-            bureteTouched = true;
-            intervalId = setInterval(addLiquidDrop, liquidDropInterval);
+            // 1. Start the burette filling animation
+            bureteTouched = true; // Allow the burette to fill
+            let targetLiquidLevel = 8 * size; // Adjust the target level as needed
+            let fillingSpeed = 0.2 * size; // Adjust the filling speed
 
-            // Create both charts
-            myChart1 = createChart('myChart1', chartData1, 'Potential (µS cm⁻¹)');
-            myChart2 = createChart('myChart2', chartData2, 'd(e)/d(v) (NTU)');
+            // 2. Animate liquid level until it reaches the target
+            let buretteFillingInterval = setInterval(() => {
+                if (liquidLevel < targetLiquidLevel) {
+                    liquidLevel += fillingSpeed;
+                } else {
+                    // 3. Stop the filling animation
+                    clearInterval(buretteFillingInterval); 
+                    bureteTouched = false; 
 
+                    // 4. Now proceed with plotting the data and other functionalities
+                    plotDataAndContinue(); 
+                }
+            }, 100); // Adjust the interval for smoother animation (milliseconds)
         }
 
-        // Stop titration function
-        function stopTitration() {
+        // Function to plot the data on the chart and continue other actions
+        function plotDataAndContinue() {
+            // Chart 1 Data
+            for (let i = 0; i < chart1Data.length; i++) {
+                chartData1.labels.push(chart1Data[i][0].toFixed(2)); // Add x-values (volume)
+                chartData1.datasets[0].data.push(chart1Data[i][1]);  // Add y-values (conductivity)
+            }
+
+            // Chart 2 Data 
+            for (let i = 0; i < chart2Data.length; i++) {
+                chartData2.labels.push(chart2Data[i][0].toFixed(2)); // Add x-values (volume)
+                chartData2.datasets[0].data.push(chart2Data[i][1]);  // Add y-values (dummy data)
+            }
+
+            // Create the Chart.js charts 
+            myChart1 = createChart('myChart1', chartData1, 'Conductivity (µS cm⁻¹)');
+            myChart2 = createChart('myChart2', chartData2, 'Dummy Data (arbitrary units)'); // Create the second chart
+
+            // Update visual elements 
+            liquidLevel = 0; 
+            cropHeight = 0;
+        }
+
+        // Stop titration function (No changes needed)
+        function stopTitration() { 
             bureteTouched = false;
-            Swal.fire({
-                title: "Stop titration",
-                icon: "warning",
-                allowOutsideClick: false
-            });
-            clearInterval(intervalId);
-
-            // Clear chart data (Optional)
-            // If you want to completely clear the chart for a new titration
-            // chartData1.labels = [];
-            // chartData1.datasets[0].data = [];
-            // chartData2.labels = [];
-            // chartData2.datasets[0].data = [];
-            // myChart1.update(); 
-            // myChart2.update(); 
         }
 
-        // Toggle start/stop button function
+        // Toggle start/stop button function (No changes needed)
         function toggleStartStop() {
             let startButton = document.getElementById("Start");
             if (bureteTouched) {
                 stopTitration();
             } else {
-
                 startTitration();
             }
         }
 
-        // Function to update "Start" button text
+        // Function to update "Start" button text (No changes needed)
         function updateStartButton() {
             let startButton = document.getElementById("Start");
             startButton.textContent = bureteTouched ? "Stop" : "Start";
@@ -596,57 +561,26 @@
             }
         }
 
-        // Function to calculate pH (replace with your actual calculation logic)
-        function calculateValue1(vadded) {
-            let index = 0;
-            while (index < data1.length - 1 && data1[index + 1].x <= vadded) {
-                index++;
-            }
-            // Linear interpolation
-            if (index < data1.length - 1) {
-                const slope = (data1[index + 1].y - data1[index].y) / (data1[index + 1].x - data1[index].x);
-                return data1[index].y + slope * (vadded - data1[index].x);
-            } else if (index >= data1.length - 1) {
-                return data1[index].y;
-            } else {
-                return null;
-            }
-        }
-
-        function calculateValue2(vadded) {
-            let index = 0;
-            while (index < data2.length - 1 && data2[index + 1].x <= vadded) {
-                index++;
-            }
-            // Linear interpolation
-            if (index < data2.length - 1) {
-                const slope = (data2[index + 1].y - data2[index].y) / (data2[index + 1].x - data2[index].x);
-                return data2[index].y + slope * (vadded - data2[index].x);
-            } else if (index >= data2.length - 1) {
-                return data2[index].y;
-            } else {
-                return null;
-            }
-        }
-
-        // Calculator function
-        function calculateN2() {
-            var n1 = parseFloat(document.getElementById("n1").value);
-            var v1 = parseFloat(document.getElementById("v1").value);
-            var v2 = parseFloat(document.getElementById("v2").value);
-            var v3 = parseFloat(document.getElementById("v3").value);
-
-            if (isNaN(n1) || isNaN(v1) || isNaN(v2) || isNaN(v3)) {
-                document.getElementById("result").innerHTML = "Please enter valid numbers.";
-                return;
+        // Function to calculate the value for the graph (using provided data)
+        function calculateValue(vadded) {
+            // Find the appropriate index in the data array
+            let i = 0;
+            while (i < chart1Data.length && chart1Data[i][0] < vadded) {
+                i++;
             }
 
-            var n2 = (n1 * v2) / v3;
+            // Check for out-of-bounds conditions
+            if (i === 0) return chart1Data[0][1]; // Before the first data point
+            if (i >= chart1Data.length) return chart1Data[chart1Data.length - 1][1]; // After the last data point
 
-            document.getElementById("result").innerHTML = "Normality of CuSO4 solution (N2): " + n2.toFixed(2);
+            // Linear interpolation between the surrounding data points
+            let x1 = chart1Data[i - 1][0];
+            let y1 = chart1Data[i - 1][1];
+            let x2 = chart1Data[i][0];
+            let y2 = chart1Data[i][1];
+            return y1 + (vadded - x1) * ((y2 - y1) / (x2 - x1));
         }
     </script>
-
 </body>
 
 </html>
