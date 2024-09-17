@@ -14,7 +14,6 @@
     crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     .choose {
-      
       margin-top: 20px;
       display: flex;
       justify-content: center;
@@ -35,16 +34,17 @@
       transition: transform 0.3s ease, background-color 0.3s ease;
     }
 
-    #silver-button{
+    #silver-button {
       display: none;
     }
 
-    #gold-button{
+    #gold-button {
       display: none;
     }
-.all-btns{
-  display: none;
-}
+
+    .all-btns {
+      display: none;
+    }
 
     .choose button:nth-child(2) {
       background-color: #c0c0c0;
@@ -67,71 +67,111 @@
     }
 
     .graph {
-    display: none; /* Initially hidden */
-    margin-top: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column; /* Stack buttons vertically */
-  }
+      display: none;
+      /* Initially hidden */
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      /* Stack buttons vertically */
+    }
 
-  .graph button {
-    background-color: #4caf50; /* Green color for the buttons */
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    margin: 10px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 8px;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-  }
+    .graph button {
+      background-color: #4caf50;
+      /* Green color for the buttons */
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      margin: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
 
-  .graph button:hover {
-    transform: scale(1.1);
-    background-color: #45a049; /* Darker green on hover */
-  }
+    .graph button:hover {
+      transform: scale(1.1);
+      background-color: #45a049;
+      /* Darker green on hover */
+    }
 
-  .graph button:active {
-    transform: scale(0.95);
-    background-color: #388e3c; /* Even darker green when clicked */
-  }
+    .graph button:active {
+      transform: scale(0.95);
+      background-color: #388e3c;
+      /* Even darker green when clicked */
+    }
 
-  .graph a{
-    text-decoration: none;
-  }
+    .graph a {
+      text-decoration: none;
+    }
 
-  /* Specific styles for gold-graph button */
-  #gold-graph {
-    background-color: #d4af37; /* Gold color */
-    display: none;
-  }
+    /* Specific styles for gold-graph button */
+    #gold-graph {
+      background-color: #d4af37;
+      /* Gold color */
+      display: none;
+    }
 
-  #gold-graph:hover {
-    background-color: #b8860b; /* Darker gold on hover */
-  }
+    #gold-graph:hover {
+      background-color: #b8860b;
+      /* Darker gold on hover */
+    }
 
-  #gold-graph:active {
-    background-color: #8b6d3e; /* Even darker gold when clicked */
-  }
+    #gold-graph:active {
+      background-color: #8b6d3e;
+      /* Even darker gold when clicked */
+    }
 
-  /* Specific styles for nitrate-graph button */
-  #nitrate-graph {
-    background-color: #c0c0c0; /* Silver color */
-    display: none;
+    /* Specific styles for nitrate-graph button */
+    #nitrate-graph {
+      background-color: #c0c0c0;
+      /* Silver color */
+      display: none;
+    }
 
-  }
+    #nitrate-graph:hover {
+      background-color: #a9a9a9;
+      /* Darker silver on hover */
+    }
 
-  #nitrate-graph:hover {
-    background-color: #a9a9a9; /* Darker silver on hover */
-  }
+    #nitrate-graph:active {
+      background-color: #888888;
+      /* Even darker silver when clicked */
+    }
 
-  #nitrate-graph:active {
-    background-color: #888888; /* Even darker silver when clicked */
-  }
+    .procedure-buttons {
+      display: none;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
 
+    .procedure-buttons button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      margin: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
 
+    .procedure-buttons button:hover {
+      transform: scale(1.1);
+      background-color: #45a049;
+    }
+
+    .procedure-buttons button:active {
+      transform: scale(0.95);
+      background-color: #388e3c;
+    }
   </style>
 </head>
 
@@ -139,7 +179,7 @@
   <h1 class="heading"> Green Synthesis of Silver and Gold Nanoparticles using leaf extract </h1>
 
   <div id="thumbnail-container">
-    
+
 
     <div id="video-container">
       <video id="video" width="800" height="600" controls>
@@ -151,7 +191,7 @@
     <img src="./images/bg1.png" id="Thumbnail" alt="Thumbnail">
     <button id="play-button" onclick="startVideo()">▶</button>
 
-    
+
   </div>
 
   <!-- Place buttons below the video -->
@@ -164,13 +204,25 @@
 
   <div class="graph">
     <a href="./Graphs/gold.html">
-      <button id="gold-graph">Show Gold Graph</button>
+      <button id="gold-graph" style="display: none;">Show UV-Visible Spectra</button>
     </a>
     <a href="./Graphs/silver.html">
-      <button id="nitrate-graph">Show Nitrate Graph</button>
+      <button id="nitrate-graph" style="display: none;">Show UV-Visible Spectra</button>
     </a>
   </div>
-  
+
+  <div class="procedure-buttons" id="gold-procedure-buttons" style="display: none;">
+    <button id="start-procedure">Start Procedure</button>
+    <button id="extraction-leaves" style="display: none;">Extraction of Leaves</button>
+    <button id="preparation-nanoparticles" style="display: none;">Preparation of Nanoparticles</button>
+  </div>
+
+  <div class="procedure-buttons" id="silver-procedure-buttons" style="display: none;">
+    <button id="silver-start-procedure">Start Procedure</button>
+    <button id="silver-extraction-leaves" style="display: none;">Extraction of Leaves</button>
+    <button id="silver-preparation-nanoparticles" style="display: none;">Preparation of Nanoparticles</button>
+  </div>
+
 
   <script>
     var videos = ["intro.mp4"];
@@ -205,8 +257,8 @@
       video.play();
       startButton.style.display = 'none';
       thumbnail.style.display = 'none';
-      gold.style.display='block'
-      silver.style.display='block'
+      gold.style.display = 'block'
+      silver.style.display = 'block'
 
     }
 
@@ -249,33 +301,105 @@
 
     // Event listeners for buttons
     document.getElementById('gold-button').addEventListener('click', function () {
-      document.getElementById('silver-button').style.display="none"
-      document.getElementById('gold-button').style.display="none"
+      document.getElementById('silver-button').style.display = "none"
+      document.getElementById('gold-button').style.display = "none"
 
+      // Pause the current video (if playing)
       video.pause();
-      // Set the correct source (assuming the video is in the same directory)
-      video.src = 'gold nitrate.mp4'; // Replace 'gold nitrate.mp4' with the actual file name
-      video.load(); // Load the new video
-      video.play();
-      console.log('Playing Gold Nitrate video');
 
-    document.getElementById('gold-graph').style.display = 'block';
+      // Show the procedure buttons for gold and the "Start Procedure" button ONLY
+      document.getElementById('gold-procedure-buttons').style.display = 'flex';
+      document.getElementById('start-procedure').style.display = 'block';
 
+      // You can optionally hide the video container here if you want:
+      // videoContainer.style.display = 'none'; 
     });
 
     document.getElementById('silver-button').addEventListener('click', function () {
-    document.getElementById('gold-button').style.display = "none";
-    document.getElementById('silver-button').style.display = "none";
+      document.getElementById('gold-button').style.display = "none";
+      document.getElementById('silver-button').style.display = "none";
 
-    video.pause();
-    video.src = 'silver nitrate.mp4'; // Replace 'silver nitrate.mp4' with the actual file name
-    video.load();
-    video.play();
-    console.log('Playing Silver Nitrate video');
+      // Pause the current video (if playing)
+      video.pause();
 
-    // Display the nitrate graph button and the graph container
-    document.getElementById('nitrate-graph').style.display = 'block';
-  });
+      // Show the procedure buttons for silver and the "Start Procedure" button ONLY
+      document.getElementById('silver-procedure-buttons').style.display = 'flex';
+      document.getElementById('silver-start-procedure').style.display = 'block';
+
+      // You can optionally hide the video container here if you want:
+      // videoContainer.style.display = 'none';
+    });
+
+
+    // Gold Start Procedure button click
+    document.getElementById('start-procedure').addEventListener('click', function () {
+      video.pause();
+      video.src = 'gold 1.mp4';
+      video.load();
+      video.play();
+
+      this.style.display = 'none';
+      document.getElementById('extraction-leaves').style.display = 'block';
+    });
+
+    // Gold Extraction of Leaves button click
+    document.getElementById('extraction-leaves').addEventListener('click', function () {
+      video.pause();
+      video.src = 'gold 2.mp4';
+      video.load();
+      video.play();
+
+      this.style.display = 'none';
+      document.getElementById('preparation-nanoparticles').style.display = 'block';
+    });
+
+    // Gold Preparation of Nanoparticles button click (modified)
+    document.getElementById('preparation-nanoparticles').addEventListener('click', function () {
+      video.pause();
+      video.src = 'gold 3.mp4';
+      video.load();
+      video.play();
+
+      this.style.display = 'none';
+      // Show the "Show UV-Visible Spectra" button at the end of the gold simulation
+      document.getElementById('gold-graph').style.display = 'block';
+    });
+
+    // Silver Start Procedure button click
+    document.getElementById('silver-start-procedure').addEventListener('click', function () {
+      video.pause();
+      video.src = 'silver 1.mp4';
+      video.load();
+      video.play();
+
+      this.style.display = 'none';
+      document.getElementById('silver-extraction-leaves').style.display = 'block';
+    });
+
+    // Silver Extraction of Leaves button click
+    document.getElementById('silver-extraction-leaves').addEventListener('click', function () {
+      video.pause();
+      video.src = 'silver 2.mp4';
+      video.load();
+      video.play();
+
+      this.style.display = 'none';
+      document.getElementById('silver-preparation-nanoparticles').style.display = 'block';
+    });
+
+    // Silver Preparation of Nanoparticles button click (modified)
+    document.getElementById('silver-preparation-nanoparticles').addEventListener('click', function () {
+      video.pause();
+      video.src = 'silver 3.mp4';
+      video.load();
+      video.play();
+
+      this.style.display = 'none';
+      // Show the "Show UV-Visible Spectra" button at the end of the silver simulation
+      document.getElementById('nitrate-graph').style.display = 'block';
+    });
+
+
   </script>
 
 </body>
