@@ -94,8 +94,6 @@
       background-color: #8b6d3e;
       /* Even darker gold when clicked */
     }
-
-    /* Specific styles for nitrate-graph button */
   </style>
 </head>
 
@@ -104,22 +102,16 @@
     conductivity meter</h1>
 
   <div id="thumbnail-container" class="">
-
-
     <div id="video-container">
       <video id="video" width="800" height="600" controls>
-        <source src="intro.mp4" type="video/mp4" id='source'>
+        <source src="conductometer.mp4" type="video/mp4" id='source'>
         Your browser does not support the video tag.
       </video>
     </div>
 
     <img src="./images/bg1.png" id="Thumbnail" alt="Thumbnail">
     <button id="play-button" onclick="startVideo()">▶</button>
-
-
   </div>
-
-  <!-- Place buttons below the video -->
 
   <div class="graph">
     <a href="./Graphs/exp7-conductometry.html">
@@ -127,32 +119,13 @@
     </a>
   </div>
 
-
   <script>
-    var videos = ["intro.mp4"];
+    var videos = ["conductometer.mp4"];
     var currentVideoIndex = 0;
     var video = document.getElementById('video');
     var videoContainer = document.getElementById('video-container');
     var startButton = document.getElementById('play-button');
-    var nextButton = document.getElementById('next-button');
     var thumbnail = document.getElementById('Thumbnail');
-    var source = document.getElementById('source');
-    let gold = document.getElementById('gold-button')
-
-
-    // Function to set up the 'ended' event listener
-    function setupVideoEndedListener() {
-      video.addEventListener('ended', function onEnded() {
-        if (currentVideoIndex === 0) {
-          nextButton.style.display = 'block';
-        } else if (currentVideoIndex === 1) {
-          window.location.href = 'StartHtml.html';
-        }
-      });
-    }
-
-    // Call it initially for the first video
-    setupVideoEndedListener();
 
     function startVideo() {
       videoContainer.style.display = 'block';
@@ -160,48 +133,12 @@
       video.play();
       startButton.style.display = 'none';
       thumbnail.style.display = 'none';
-      document.getElementById('gold-graph').style.display = 'block'
-
+      document.getElementById('gold-graph').style.display = 'block';
     }
-
-    function nextVideo() {
-      if (currentVideoIndex == 0) {
-        currentVideoIndex = (currentVideoIndex + 1) % videos.length;
-        video.src = videos[currentVideoIndex];
-        video.play();
-        nextButton.style.display = 'none';
-      } else if (currentVideoIndex == 1) {
-        window.location.href = 'StartHtml.html';
-      }
-    }
-
-    setTimeout(() => {
-      const skipB = document.getElementById('skipB');
-    }, 3000);
 
     function skip() {
       window.location.href = 'StartHtml.html';
     }
-
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
-        } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
-          document.documentElement.mozRequestFullScreen();
-        } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-          document.documentElement.webkitRequestFullscreen();
-        } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
-          document.documentElement.msRequestFullscreen();
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
-      }
-    }
-
-
   </script>
 
 </body>
