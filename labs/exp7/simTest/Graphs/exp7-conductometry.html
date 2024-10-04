@@ -162,16 +162,16 @@
   <div id="calculator">
     <h2>Calculate N2 from N1, V1, and V2</h2>
     <form id="calculationForm">
-      <label for="n1">Normality of Hypo solution in burette:</label>
+      <label for="n1">Normality of NaOH solution in burette:</label>
       <input type="number" id="n1" name="n1" required>
 
-      <label for="v1">Volume of CuSO4 solution in conical flask:</label>
+      <label for="v1">Volume of HCl solution in beaker:</label>
       <input type="number" id="v1" name="v1" required>
 
-      <label for="v2">1. Volume of Hypo solution added in CuSO4 solution:</label>
+      <label for="v2">1. Volume of NaOH solution added in HCl solution:</label>
       <input type="number" id="v2" name="v2" required>
 
-      <label for="v3">2. Volume of CuSO4 solution in conical flask:</label>
+      <label for="v3">2. Volume of HCl solution in conical flask:</label>
       <input type="number" id="v3" name="v3" required>
 
       <button type="button" onclick="calculateN2()">Calculate N2</button>
@@ -591,7 +591,7 @@
 
       var n2 = (n1 * v2) / v3;
 
-      document.getElementById("result").innerHTML = "Normality of CuSO4 solution (N2): " +
+      document.getElementById("result").innerHTML = "Normality of NaOH solution (N2): " +
         n2.toFixed(2);
     }
   </script>
